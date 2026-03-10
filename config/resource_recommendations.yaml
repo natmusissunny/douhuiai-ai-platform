@@ -1,0 +1,35 @@
+mcps:
+- name: filesystem
+  description: 文件系统操作，读写文件、目录管理
+  score: 0.29549999999999993
+  priority: 4
+  reasons:
+  - 适合Python项目
+  install_command: npx -y @modelcontextprotocol/server-filesystem
+- name: git
+  description: Git 版本控制操作
+  score: 0.291
+  priority: 4
+  reasons:
+  - 适合Python项目
+  install_command: npx -y @modelcontextprotocol/server-git
+skills:
+- name: doc-coauthoring
+  description: 文档协作工具，用于编写技术文档、提案、规范等
+  score: 0.5909999999999999
+  priority: 3
+  reasons:
+  - 适合Python项目
+  - 项目有文档目录
+- name: mcp-builder
+  description: 构建高质量的 MCP 服务器
+  score: 0.29369999999999996
+  priority: 4
+  reasons:
+  - 适合Python项目
+- name: webapp-testing
+  description: Web 应用测试工具（Playwright）
+  score: 0.19340000000000002
+  priority: 5
+  reasons:
+  - 项目有测试
