@@ -1,8 +1,9 @@
 /**
- * 管理后台 - 项目管理页面
+ * 管理后台 - 任务管理页面
+ * 从后端 API 获取所有用户的 AI 生成任务记录
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Table,
   Button,
@@ -11,72 +12,59 @@ import {
   Select,
   Typography,
   Image,
+  message,
 } from 'antd';
 import { SearchOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { getAdminProjects, type AdminProjectItem } from '../../api/admin';
 
 const { Title } = Typography;
 
-// Mock数据 - 实际应该从API获取
-const mockProjects = [
-  {
-    id: 1,
-    title: '梦幻森林',
-    type: 'text2img',
-    status: 'completed',
-    username: 'user123',
-    result_url: 'https://via.placeholder.com/150',
-    created_at: '2026-02-14T10:00:00',
-  },
-  {
-    id: 2,
-    title: '赛博朋克城市',
-    type: 'img2img',
-    status: 'processing',
-    username: 'user456',
-    result_url: null,
-    created_at: '2026-02-14T11:00:00',
-  },
-  {
-    id: 3,
-    title: '未来科技',
-    type: 'text2img',
-    status: 'failed',
-    username: 'user789',
-    result_url: null,
-    created_at: '2026-02-14T12:00:00',
-  },
-];
-
 export const ProjectManagementPage: React.FC = () => {
   const navigate = useNavigate();
-  const [projects] = useState(mockProjects);
+  const [projects, setProjects] = useState<AdminProjectItem[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>();
   const [statusFilter, setStatusFilter] = useState<string>();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
-  // Mock加载数据
-  useEffect(() => {
-    // 实际应该调用API
-    setLoading(false);
-  }, [search, typeFilter, statusFilter]);
-
-  const handleSearch = (value: string) => {
-    setSearch(value);
-  };
-
-  const handleTypeFilter = (value: string) => {
-    setTypeFilter(value || undefined);
-  };
-
-  const handleStatusFilter = (value: string) => {
-    setStatusFilter(value || undefined);
-  };
-
-  const handleRefresh = () => {
+  /** 从后端加载任务数据 */
+  const fetchProjects = useCallback(async () => {
     setLoading(true);
-    setTimeout(() => setLoading(false), 500);
+    try {
+      const res = await getAdminProjects({
+        skip: (page - 1) * pageSize,
+        limit: pageSize,
+        type: typeFilter,
+        status: statusFilter,
+        search: search || undefined,
+      });
+      setProjects(res.items || []);
+      setTotal(res.total || 0);
+    } catch {
+      message.error('获取任务列表失败');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, pageSize, typeFilter, statusFilter, search]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  /** 类型显示映射 */
+  const typeMap: Record<string, { label: string; color: string }> = {
+    text2img: { label: '文生图', color: 'blue' },
+    img2img: { label: '图生图', color: 'green' },
+    edit: { label: '图像编辑', color: 'orange' },
+    '3d_render': { label: '3D渲染', color: 'purple' },
+    portrait: { label: '人像写真', color: 'magenta' },
+    ecommerce: { label: '产品电商', color: 'gold' },
+    video: { label: '视频创作', color: 'cyan' },
+    architecture: { label: '建筑室内', color: 'geekblue' },
   };
 
   const columns = [
@@ -84,36 +72,37 @@ export const ProjectManagementPage: React.FC = () => {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
-      width: 80,
+      width: 70,
     },
     {
-      title: '项目名称',
-      dataIndex: 'title',
-      key: 'title',
+      title: '描述',
+      dataIndex: 'prompt',
+      key: 'prompt',
       width: 200,
+      ellipsis: true,
+      render: (prompt: string) => prompt || <span style={{ color: '#9ca3af' }}>无描述</span>,
     },
     {
       title: '类型',
       dataIndex: 'type',
       key: 'type',
-      width: 120,
-      render: (type: string) => {
-        const typeMap: Record<string, { label: string; color: string }> = {
-          text2img: { label: '文生图', color: 'blue' },
-          img2img: { label: '图生图', color: 'green' },
-          edit: { label: '图像编辑', color: 'orange' },
-          '3d': { label: '3D渲染', color: 'purple' },
-        };
+      width: 110,
+      render: (type: string, record: AdminProjectItem) => {
         const config = typeMap[type] || { label: type, color: 'default' };
-        return <Tag color={config.color}>{config.label}</Tag>;
+        return (
+          <span>
+            <Tag color={config.color}>{config.label}</Tag>
+            {record.subtype && <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>{record.subtype}</div>}
+          </span>
+        );
       },
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      width: 120,
-      render: (status: string) => {
+      width: 100,
+      render: (status: string, record: AdminProjectItem) => {
         const statusMap: Record<string, { label: string; color: string }> = {
           pending: { label: '等待中', color: 'default' },
           processing: { label: '处理中', color: 'processing' },
@@ -121,45 +110,53 @@ export const ProjectManagementPage: React.FC = () => {
           failed: { label: '失败', color: 'error' },
         };
         const config = statusMap[status] || { label: status, color: 'default' };
-        return <Tag color={config.color}>{config.label}</Tag>;
+        return (
+          <span>
+            <Tag color={config.color}>{config.label}</Tag>
+            {status === 'processing' && <div style={{ fontSize: 11, color: '#1890ff' }}>{record.progress}%</div>}
+          </span>
+        );
       },
     },
     {
       title: '用户',
       dataIndex: 'username',
       key: 'username',
-      width: 150,
+      width: 120,
+    },
+    {
+      title: '消耗豆点',
+      dataIndex: 'quota_cost',
+      key: 'quota_cost',
+      width: 100,
+      render: (cost: number) => <span style={{ color: '#cf1322' }}>{cost.toFixed(1)}</span>,
     },
     {
       title: '预览',
-      dataIndex: 'result_url',
-      key: 'result_url',
-      width: 100,
-      render: (url: string | null) =>
-        url ? (
-          <Image
-            src={url}
-            width={50}
-            height={50}
-            style={{ objectFit: 'cover' }}
-          />
+      key: 'preview',
+      width: 80,
+      render: (_: any, record: AdminProjectItem) => {
+        const url = record.result_url || (record.result_urls && record.result_urls[0]);
+        return url ? (
+          <Image src={url} width={50} height={50} style={{ objectFit: 'cover', borderRadius: 4 }} />
         ) : (
-          <span className="text-gray-400">-</span>
-        ),
+          <span style={{ color: '#d1d5db' }}>-</span>
+        );
+      },
     },
     {
       title: '创建时间',
       dataIndex: 'created_at',
       key: 'created_at',
-      width: 180,
-      render: (time: string) => new Date(time).toLocaleString('zh-CN'),
+      width: 170,
+      render: (time: string) => time ? new Date(time).toLocaleString('zh-CN') : '-',
     },
     {
       title: '操作',
       key: 'action',
-      width: 100,
+      width: 80,
       fixed: 'right' as const,
-      render: (_: any, record: any) => (
+      render: (_: any, record: AdminProjectItem) => (
         <Button
           type="link"
           size="small"
@@ -174,35 +171,30 @@ export const ProjectManagementPage: React.FC = () => {
 
   return (
     <div>
-      <Title level={2}>项目管理</Title>
+      <Title level={2}>任务管理</Title>
 
-      {/* 筛选和操作栏 */}
+      {/* 筛选栏 */}
       <div className="mb-4 flex flex-wrap gap-4">
         <Input
-          placeholder="搜索项目名称或用户"
+          placeholder="搜索用户名"
           prefix={<SearchOutlined />}
-          style={{ width: 300 }}
+          style={{ width: 250 }}
           allowClear
-          onPressEnter={(e) => handleSearch(e.currentTarget.value)}
-          onChange={(e) => !e.target.value && handleSearch('')}
+          onPressEnter={(e) => { setSearch(e.currentTarget.value); setPage(1); }}
+          onChange={(e) => { if (!e.target.value) { setSearch(''); setPage(1); } }}
         />
         <Select
           placeholder="筛选类型"
           style={{ width: 150 }}
           allowClear
-          onChange={handleTypeFilter}
-          options={[
-            { value: 'text2img', label: '文生图' },
-            { value: 'img2img', label: '图生图' },
-            { value: 'edit', label: '图像编辑' },
-            { value: '3d', label: '3D渲染' },
-          ]}
+          onChange={(v) => { setTypeFilter(v || undefined); setPage(1); }}
+          options={Object.entries(typeMap).map(([value, { label }]) => ({ value, label }))}
         />
         <Select
           placeholder="筛选状态"
           style={{ width: 150 }}
           allowClear
-          onChange={handleStatusFilter}
+          onChange={(v) => { setStatusFilter(v || undefined); setPage(1); }}
           options={[
             { value: 'pending', label: '等待中' },
             { value: 'processing', label: '处理中' },
@@ -210,12 +202,12 @@ export const ProjectManagementPage: React.FC = () => {
             { value: 'failed', label: '失败' },
           ]}
         />
-        <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
+        <Button icon={<ReloadOutlined />} onClick={fetchProjects}>
           刷新
         </Button>
       </div>
 
-      {/* 项目列表表格 */}
+      {/* 任务列表 */}
       <Table
         columns={columns}
         dataSource={projects}
@@ -223,9 +215,13 @@ export const ProjectManagementPage: React.FC = () => {
         loading={loading}
         scroll={{ x: 1200 }}
         pagination={{
+          current: page,
+          pageSize: pageSize,
+          total: total,
           showSizeChanger: true,
           showQuickJumper: true,
-          showTotal: (total) => `共 ${total} 个项目`,
+          showTotal: (t) => `共 ${t} 条任务`,
+          onChange: (p, ps) => { setPage(p); setPageSize(ps); },
         }}
       />
     </div>

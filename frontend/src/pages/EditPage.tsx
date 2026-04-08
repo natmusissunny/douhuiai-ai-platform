@@ -18,30 +18,29 @@ const loraOptions = [
   { label: '素描风', value: 'sketch' },
 ];
 
-// 左侧菜单
+// 左侧菜单（editType 对齐后端 EDIT_TYPE_MAP + EDIT_TYPE_MAP_EXTENDED）
 const sideMenus = [
   {
     label: '图片编辑器',
     items: [
       { label: '万能改图', editType: 'universal_edit' },
-      { label: '图片修复', editType: 'repair' },
-      { label: '编辑应用', editType: 'edit_app' },
+      { label: '图片精修', editType: 'img_refine' },
       { label: '多图融合', editType: 'multi_merge' },
       { label: '相似图生成', editType: 'similar_gen' },
       { label: '描述词反推', editType: 'reverse_prompt' },
-      { label: 'PS场景融合', editType: 'ps_merge' },
+      { label: '图片视角调整', editType: 'universal_edit' },
+      { label: '批量抠图', editType: 'remove_bg' },
     ],
   },
   {
     label: '编辑工具',
     items: [
-      { label: '图片视角调整', editType: 'perspective' },
-      { label: '批量抠图', editType: 'batch_cutout' },
-      { label: '3d模型渲染', editType: '3d_model' },
-      { label: '线稿渲染', editType: 'line_render' },
-      { label: '风格材质更换', editType: 'style_change' },
+      { label: '3D模型渲染', editType: 'model_render' },
+      { label: '线稿渲染', editType: 'line_render_edit' },
+      { label: '风格材质更换', editType: 'style_material' },
       { label: 'PNG素材生成', editType: 'png_gen' },
       { label: '人物多姿势', editType: 'multi_pose' },
+      { label: '真人转漫画', editType: 'people2cartoon' },
     ],
   },
 ];

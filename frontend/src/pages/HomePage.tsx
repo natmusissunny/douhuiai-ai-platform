@@ -77,18 +77,18 @@ const navItems = [
         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
       </svg>
     ),
-    path: '/create/edit',
+    path: '/create/ecommerce',
     sub: [
-      { label: '一键白底图', path: '/create/edit' },
-      { label: '一键场景图', path: '/create/edit' },
-      { label: '一键卖点图', path: '/create/edit' },
-      { label: 'AI试穿试戴', path: '/create/edit' },
-      { label: '商品图编辑', path: '/create/edit' },
-      { label: '电商换背景', path: '/create/edit' },
-      { label: '模特试衣', path: '/create/edit' },
-      { label: 'AI换模特', path: '/create/edit' },
-      { label: '场景加模特', path: '/create/edit' },
-      { label: 'AI产品设计', path: '/create/edit' },
+      { label: '一键白底图', path: '/create/ecommerce' },
+      { label: '一键场景图', path: '/create/ecommerce' },
+      { label: '一键卖点图', path: '/create/ecommerce' },
+      { label: 'AI试穿试戴', path: '/create/ecommerce' },
+      { label: '商品图编辑', path: '/create/ecommerce' },
+      { label: '电商换背景', path: '/create/ecommerce' },
+      { label: '模特试衣', path: '/create/ecommerce' },
+      { label: 'AI换模特', path: '/create/ecommerce' },
+      { label: '场景加模特', path: '/create/ecommerce' },
+      { label: 'AI产品设计', path: '/create/ecommerce' },
     ],
   },
   {
@@ -98,16 +98,16 @@ const navItems = [
         <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>
       </svg>
     ),
-    path: '/create/3d',
+    path: '/create/video',
     sub: [
-      { label: '图生视频', path: '/create/3d' },
-      { label: '文生视频', path: '/create/3d' },
-      { label: '视频特效', path: '/create/3d' },
-      { label: '首尾帧', path: '/create/3d' },
-      { label: 'Veo视频', path: '/create/3d' },
-      { label: 'Sora2视频', path: '/create/3d' },
-      { label: '文生音频', path: '/create/3d' },
-      { label: '数字人口播', path: '/create/3d' },
+      { label: '文生视频', path: '/create/video' },
+      { label: '图生视频', path: '/create/video' },
+      { label: '首尾帧', path: '/create/video' },
+      { label: 'Sora2视频', path: '/create/video' },
+      { label: '数字人口播', path: '/create/video' },
+      { label: '文生视频(音频版)', path: '/create/video' },
+      { label: '图生视频(音频版)', path: '/create/video' },
+      { label: '文生音频', path: '/create/video' },
     ],
   },
   {
@@ -118,14 +118,14 @@ const navItems = [
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
     ),
-    path: '/create/3d',
+    path: '/create/architecture',
     sub: [
-      { label: '效果图后期', path: '/create/3d' },
-      { label: '效果图增强', path: '/create/3d' },
-      { label: 'AI概念图', path: '/create/3d' },
-      { label: '软硬装替换', path: '/create/3d' },
-      { label: '风格转换', path: '/create/3d' },
-      { label: '彩平图', path: '/create/3d' },
+      { label: '效果图后期', path: '/create/architecture' },
+      { label: '效果图增强', path: '/create/architecture' },
+      { label: 'AI概念图', path: '/create/architecture' },
+      { label: '软硬装替换', path: '/create/architecture' },
+      { label: '风格转换', path: '/create/architecture' },
+      { label: '彩平图', path: '/create/architecture' },
     ],
   },
   {
@@ -136,16 +136,16 @@ const navItems = [
         <circle cx="12" cy="13" r="4"/>
       </svg>
     ),
-    path: '/create/img2img',
+    path: '/create/portrait',
     sub: [
-      { label: '人像换脸', path: '/create/img2img' },
-      { label: '老照片修复', path: '/create/img2img' },
-      { label: '人像变清晰', path: '/create/img2img' },
-      { label: '照片上色', path: '/create/img2img' },
-      { label: 'AI证件照', path: '/create/img2img' },
-      { label: 'AI写真/形象照', path: '/create/img2img' },
-      { label: 'AI换发型', path: '/create/img2img' },
-      { label: '真人转漫画', path: '/create/img2img' },
+      { label: '人像换脸', path: '/create/portrait' },
+      { label: '老照片修复', path: '/create/portrait' },
+      { label: '人像变清晰', path: '/create/portrait' },
+      { label: '照片上色', path: '/create/portrait' },
+      { label: 'AI证件照', path: '/create/portrait' },
+      { label: 'AI写真/形象照', path: '/create/portrait' },
+      { label: 'AI换发型', path: '/create/portrait' },
+      { label: '真人转漫画', path: '/create/portrait' },
     ],
   },
   {
@@ -203,7 +203,7 @@ const features = [
     bg: '#EEF6FF', iconBg: '#3B82F6',
   },
   {
-    icon: '🎬', title: 'AI视频创作', path: '/create/3d',
+    icon: '🎬', title: 'AI视频创作', path: '/create/video',
     desc: '告别复杂剪辑，AI一键成片',
     tags: ['图生视频', '首尾帧', '文生视频', 'Veo视频创作'],
     bg: '#F5F0FF', iconBg: '#8B5CF6',

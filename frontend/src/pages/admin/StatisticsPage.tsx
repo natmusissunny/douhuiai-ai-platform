@@ -1,8 +1,12 @@
 /**
  * 管理后台 - 数据统计页面
+ *
+ * 作用：展示平台运营核心指标
+ * - 项目统计：按类型/状态分布、成功率、平均处理时间
+ * - 配额统计：充值/消耗/退款总量、当日/当月交易量
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   Card,
   Row,
@@ -10,14 +14,42 @@ import {
   Typography,
   DatePicker,
   Space,
-  Table,
   Spin,
+  Empty,
 } from 'antd';
 import { useAdminStore } from '../../stores/adminStore';
 import dayjs from 'dayjs';
+import { useState } from 'react';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
+
+/** 安全转数字，处理字符串/Decimal/undefined */
+const toNum = (v: any): number => {
+  if (v === null || v === undefined) return 0;
+  const n = Number(v);
+  return isNaN(n) ? 0 : n;
+};
+
+/** 类型名称映射 */
+const typeLabels: Record<string, string> = {
+  text2img: '文生图',
+  img2img: '图生图',
+  edit: '图像编辑',
+  '3d_render': '3D渲染',
+  portrait: '人像写真',
+  ecommerce: '产品电商',
+  video: '视频创作',
+  architecture: '建筑室内',
+};
+
+/** 状态名称映射 */
+const statusLabels: Record<string, string> = {
+  pending: '等待中',
+  processing: '处理中',
+  completed: '已完成',
+  failed: '失败',
+};
 
 export const StatisticsPage: React.FC = () => {
   const {
@@ -61,6 +93,23 @@ export const StatisticsPage: React.FC = () => {
     );
   }
 
+  // 安全读取项目统计（对齐后端实际返回字段）
+  const byType = projectStats?.by_type || {};
+  const byStatus = projectStats?.by_status || {};
+  const successRate = toNum(projectStats?.success_rate);
+  // 后端返回 avg_processing_time，前端之前写的是 avg_completion_time
+  const avgTime = toNum(
+    (projectStats as any)?.avg_processing_time ?? (projectStats as any)?.avg_completion_time
+  );
+
+  // 安全读取配额统计（后端 Decimal 序列化为字符串，需要 Number() 转换）
+  const totalRecharged = toNum(quotaStats?.total_recharged);
+  const totalConsumed = toNum(quotaStats?.total_consumed);
+  const totalRefunded = toNum((quotaStats as any)?.total_refunded);
+  const quotaBalance = toNum((quotaStats as any)?.balance);
+  const txToday = toNum((quotaStats as any)?.transactions_today);
+  const txMonth = toNum((quotaStats as any)?.transactions_this_month);
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -70,87 +119,73 @@ export const StatisticsPage: React.FC = () => {
           onChange={handleDateChange}
           presets={[
             { label: '最近7天', value: [dayjs().subtract(7, 'days'), dayjs()] },
-            {
-              label: '最近30天',
-              value: [dayjs().subtract(30, 'days'), dayjs()],
-            },
-            {
-              label: '最近90天',
-              value: [dayjs().subtract(90, 'days'), dayjs()],
-            },
+            { label: '最近30天', value: [dayjs().subtract(30, 'days'), dayjs()] },
+            { label: '最近90天', value: [dayjs().subtract(90, 'days'), dayjs()] },
           ]}
         />
       </div>
 
       {/* 项目统计 */}
-      <Title level={4} className="mb-4">
-        项目统计
-      </Title>
+      <Title level={4} className="mb-4">项目统计</Title>
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} md={12}>
-          <Card title="按类型统计" loading={!projectStats}>
-            {projectStats && (
+          <Card title="按类型统计">
+            {Object.keys(byType).length > 0 ? (
               <Space direction="vertical" style={{ width: '100%' }}>
-                {Object.entries(projectStats.by_type).map(([type, count]) => (
-                  <div
-                    key={type}
-                    className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                  >
-                    <span className="font-medium">{type}</span>
-                    <span className="text-lg font-bold text-blue-600">
-                      {count}
-                    </span>
+                {Object.entries(byType).map(([type, count]) => (
+                  <div key={type} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <span className="font-medium">{typeLabels[type] || type}</span>
+                    <span className="text-lg font-bold text-blue-600">{count}</span>
                   </div>
                 ))}
               </Space>
+            ) : (
+              <Empty description="暂无数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             )}
           </Card>
         </Col>
         <Col xs={24} md={12}>
-          <Card title="按状态统计" loading={!projectStats}>
-            {projectStats && (
+          <Card title="按状态统计">
+            {Object.keys(byStatus).length > 0 ? (
               <Space direction="vertical" style={{ width: '100%' }}>
-                {Object.entries(projectStats.by_status).map(([status, count]) => (
-                  <div
-                    key={status}
-                    className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                  >
-                    <span className="font-medium">{status}</span>
-                    <span className="text-lg font-bold text-green-600">
-                      {count}
-                    </span>
+                {Object.entries(byStatus).map(([status, count]) => (
+                  <div key={status} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <span className="font-medium">{statusLabels[status] || status}</span>
+                    <span className="text-lg font-bold text-green-600">{count}</span>
                   </div>
                 ))}
               </Space>
+            ) : (
+              <Empty description="暂无数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             )}
           </Card>
         </Col>
         <Col xs={24} md={8}>
-          <Card loading={!projectStats}>
+          <Card>
             <div className="text-center">
               <div className="text-gray-500 mb-2">成功率</div>
               <div className="text-3xl font-bold text-green-600">
-                {projectStats?.success_rate.toFixed(1)}%
+                {successRate.toFixed(1)}%
               </div>
             </div>
           </Card>
         </Col>
         <Col xs={24} md={8}>
-          <Card loading={!projectStats}>
+          <Card>
             <div className="text-center">
-              <div className="text-gray-500 mb-2">平均完成时间</div>
+              <div className="text-gray-500 mb-2">平均处理时间</div>
               <div className="text-3xl font-bold text-blue-600">
-                {projectStats?.avg_completion_time.toFixed(1)}s
+                {avgTime.toFixed(1)}s
               </div>
             </div>
           </Card>
         </Col>
         <Col xs={24} md={8}>
-          <Card loading={!projectStats}>
+          <Card>
             <div className="text-center">
-              <div className="text-gray-500 mb-2">热门功能数</div>
+              <div className="text-gray-500 mb-2">任务总数</div>
               <div className="text-3xl font-bold text-purple-600">
-                {projectStats?.popular_features.length || 0}
+                {Object.values(byStatus).reduce((a: number, b: any) => a + toNum(b), 0)}
               </div>
             </div>
           </Card>
@@ -158,82 +193,65 @@ export const StatisticsPage: React.FC = () => {
       </Row>
 
       {/* 配额统计 */}
-      <Title level={4} className="mb-4">
-        配额统计
-      </Title>
+      <Title level={4} className="mb-4">配额统计</Title>
       <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} md={8}>
-          <Card loading={!quotaStats}>
+        <Col xs={24} md={6}>
+          <Card>
             <div className="text-center">
               <div className="text-gray-500 mb-2">总充值</div>
-              <div className="text-3xl font-bold text-green-600">
-                ¥{quotaStats?.total_recharged.toFixed(2)}
+              <div className="text-2xl font-bold text-green-600">
+                {totalRecharged.toFixed(2)}
               </div>
             </div>
           </Card>
         </Col>
-        <Col xs={24} md={8}>
-          <Card loading={!quotaStats}>
+        <Col xs={24} md={6}>
+          <Card>
             <div className="text-center">
               <div className="text-gray-500 mb-2">总消耗</div>
-              <div className="text-3xl font-bold text-red-600">
-                ¥{quotaStats?.total_consumed.toFixed(2)}
+              <div className="text-2xl font-bold text-red-600">
+                {totalConsumed.toFixed(2)}
               </div>
             </div>
           </Card>
         </Col>
-        <Col xs={24} md={8}>
-          <Card loading={!quotaStats}>
+        <Col xs={24} md={6}>
+          <Card>
             <div className="text-center">
-              <div className="text-gray-500 mb-2">平均充值</div>
-              <div className="text-3xl font-bold text-blue-600">
-                ¥{quotaStats?.avg_recharge.toFixed(2)}
+              <div className="text-gray-500 mb-2">总退款</div>
+              <div className="text-2xl font-bold text-orange-500">
+                {totalRefunded.toFixed(2)}
               </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} md={6}>
+          <Card>
+            <div className="text-center">
+              <div className="text-gray-500 mb-2">配额余额</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {quotaBalance.toFixed(2)}
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} md={12}>
+          <Card>
+            <div className="text-center">
+              <div className="text-gray-500 mb-2">今日交易笔数</div>
+              <div className="text-2xl font-bold text-gray-800">{txToday}</div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} md={12}>
+          <Card>
+            <div className="text-center">
+              <div className="text-gray-500 mb-2">本月交易笔数</div>
+              <div className="text-2xl font-bold text-gray-800">{txMonth}</div>
             </div>
           </Card>
         </Col>
       </Row>
-
-      {/* 配额消耗排行榜 */}
-      <Title level={4} className="mb-4">
-        配额消耗排行榜
-      </Title>
-      <Card>
-        <Table
-          dataSource={quotaStats?.top_consumers || []}
-          loading={!quotaStats}
-          pagination={false}
-          columns={[
-            {
-              title: '排名',
-              key: 'rank',
-              width: 80,
-              render: (_: any, __: any, index: number) => index + 1,
-            },
-            {
-              title: '用户ID',
-              dataIndex: 'user_id',
-              key: 'user_id',
-              width: 100,
-            },
-            {
-              title: '用户名',
-              dataIndex: 'username',
-              key: 'username',
-            },
-            {
-              title: '消耗金额',
-              dataIndex: 'consumed',
-              key: 'consumed',
-              render: (consumed: number) => (
-                <span className="font-semibold text-red-600">
-                  ¥{consumed.toFixed(2)}
-                </span>
-              ),
-            },
-          ]}
-        />
-      </Card>
     </div>
   );
 };

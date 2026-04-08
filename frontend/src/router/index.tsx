@@ -17,6 +17,10 @@ import Img2ImgPage from '../pages/Img2ImgPage';
 import EditPage from '../pages/EditPage';
 import Render3DPage from '../pages/Render3DPage';
 import ProjectDetailPage from '../pages/ProjectDetailPage';
+import PortraitPage from '../pages/PortraitPage';
+import EcommercePage from '../pages/EcommercePage';
+import VideoPage from '../pages/VideoPage';
+import ArchitecturePage from '../pages/ArchitecturePage';
 import { DashboardPage as AdminDashboardPage } from '../pages/admin/DashboardPage';
 import { UserManagementPage } from '../pages/admin/UserManagementPage';
 import { RoleManagementPage } from '../pages/admin/RoleManagementPage';
@@ -43,8 +47,14 @@ const router = createBrowserRouter([
       { path: 'create/edit', element: <ProtectedRoute><EditPage /></ProtectedRoute> },
       // 视频创作 / 3D渲染
       { path: 'create/3d', element: <ProtectedRoute><Render3DPage /></ProtectedRoute> },
-      // 以下功能暂时重定向到文生图页面
-      { path: 'create/video', element: <Navigate to="/create/3d" replace /> },
+      // 人像写真
+      { path: 'create/portrait', element: <ProtectedRoute><PortraitPage /></ProtectedRoute> },
+      // 产品电商
+      { path: 'create/ecommerce', element: <ProtectedRoute><EcommercePage /></ProtectedRoute> },
+      // 视频创作
+      { path: 'create/video', element: <ProtectedRoute><VideoPage /></ProtectedRoute> },
+      // 建筑室内
+      { path: 'create/architecture', element: <ProtectedRoute><ArchitecturePage /></ProtectedRoute> },
       { path: 'create/batch', element: <Navigate to="/create/text2img" replace /> },
       { path: 'profile', element: <ProtectedRoute><UserProfilePage /></ProtectedRoute> },
     ],

@@ -311,3 +311,39 @@ export const getQuotaStats = (params?: {
 }) => {
   return request.get<QuotaStats>('/api/v1/admin/statistics/quota', { params });
 };
+
+// ==================== 任务管理 ====================
+
+export interface AdminProjectItem {
+  id: number;
+  uuid: string;
+  type: string;
+  subtype?: string;
+  status: string;
+  progress: number;
+  prompt: string;
+  username: string;
+  user_id: number;
+  result_url?: string;
+  result_urls?: string[];
+  quota_cost: number;
+  error_message?: string;
+  created_at: string;
+  completed_at?: string;
+}
+
+export interface AdminProjectListResponse {
+  total: number;
+  items: AdminProjectItem[];
+}
+
+/** 获取所有用户的任务列表 */
+export const getAdminProjects = (params?: {
+  skip?: number;
+  limit?: number;
+  type?: string;
+  status?: string;
+  search?: string;
+}): Promise<AdminProjectListResponse> => {
+  return request.get('/api/v1/admin/projects', { params });
+};
