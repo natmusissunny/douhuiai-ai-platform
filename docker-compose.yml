@@ -10,8 +10,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-douhuiai}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-douhuiai_password}
       PGDATA: /var/lib/postgresql/data/pgdata
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    # 仅容器间访问，不暴露到宿主机
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -28,8 +29,9 @@ services:
     image: redis:7-alpine
     container_name: douhuiai-redis
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
+    # 仅容器间访问，不暴露到宿主机
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     healthcheck:
