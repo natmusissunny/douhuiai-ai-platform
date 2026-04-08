@@ -4,8 +4,8 @@
 import axios, { type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import { message } from 'antd';
 
-// API 基础URL
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// API 基础URL（生产环境留空，走 nginx 代理；开发环境通过 .env 设置）
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 // 创建 axios 实例
 const request: AxiosInstance = axios.create({
