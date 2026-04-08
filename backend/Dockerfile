@@ -40,6 +40,7 @@ ENV PATH=/root/.local/bin:$PATH
 COPY ./app /app/app
 COPY ./alembic /app/alembic
 COPY alembic.ini /app/
+COPY ./scripts /app/scripts
 
 # 创建必要的目录
 RUN mkdir -p /app/logs /app/uploads
