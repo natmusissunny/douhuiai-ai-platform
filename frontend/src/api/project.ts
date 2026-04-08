@@ -34,6 +34,54 @@ export interface ImageEditRequest {
   params?: Record<string, any>;
 }
 
+// 图片重绘请求
+export interface RepaintRequest {
+  image_url: string;
+  prompt: string;
+  mode?: string;
+  params?: Record<string, any>;
+}
+
+// 大模型创作请求
+export interface ModelCreateRequest {
+  model: string;
+  prompt: string;
+  image_url?: string;
+  params?: Record<string, any>;
+}
+
+// 建筑室内请求
+export interface ArchitectureRequest {
+  arch_type: string;
+  image_url?: string;
+  prompt?: string;
+  params?: Record<string, any>;
+}
+
+// 视频创作请求
+export interface VideoRequest {
+  video_type: string;
+  prompt: string;
+  image_url?: string;
+  params?: Record<string, any>;
+}
+
+// 产品电商请求
+export interface EcommerceRequest {
+  image_url: string;
+  ecommerce_type: string;
+  prompt?: string;
+  params?: Record<string, any>;
+}
+
+// 人像写真请求
+export interface PortraitRequest {
+  image_url: string;
+  portrait_type: string;
+  face_url?: string;
+  params?: Record<string, any>;
+}
+
 // 3D渲染请求
 export interface Render3DRequest {
   model_type: string;
@@ -84,6 +132,48 @@ export const createImg2Img = (data: Img2ImgRequest): Promise<ProjectResponse> =>
  */
 export const createImageEdit = (data: ImageEditRequest): Promise<ProjectResponse> => {
   return request.post('/api/v1/projects/edit', data);
+};
+
+/**
+ * 创建图片重绘任务
+ */
+export const createRepaint = (data: RepaintRequest): Promise<ProjectResponse> => {
+  return request.post('/api/v1/projects/repaint', data);
+};
+
+/**
+ * 创建大模型创作任务
+ */
+export const createModelTask = (data: ModelCreateRequest): Promise<ProjectResponse> => {
+  return request.post('/api/v1/projects/model_create', data);
+};
+
+/**
+ * 创建建筑室内任务
+ */
+export const createArchitecture = (data: ArchitectureRequest): Promise<ProjectResponse> => {
+  return request.post('/api/v1/projects/architecture', data);
+};
+
+/**
+ * 创建视频/音频任务
+ */
+export const createVideo = (data: VideoRequest): Promise<ProjectResponse> => {
+  return request.post('/api/v1/projects/video', data);
+};
+
+/**
+ * 创建产品电商任务
+ */
+export const createEcommerce = (data: EcommerceRequest): Promise<ProjectResponse> => {
+  return request.post('/api/v1/projects/ecommerce', data);
+};
+
+/**
+ * 创建人像写真任务
+ */
+export const createPortrait = (data: PortraitRequest): Promise<ProjectResponse> => {
+  return request.post('/api/v1/projects/portrait', data);
 };
 
 /**

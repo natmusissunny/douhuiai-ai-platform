@@ -2,35 +2,44 @@
  * AI创作页面 - 豆绘AI风格
  * 对齐官方 /create/text2img 页面布局
  */
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { message, Modal } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { createText2Img } from '../api/project';
+import { createText2Img, createModelTask } from '../api/project';
 import { useAuthStore } from '../stores/authStore';
+import { useCommonStore } from '../stores/commonStore';
 
-// 左侧分类菜单数据
+// 左侧菜单项与大模型API模型名的映射
+const menuModelMap: Record<string, string> = {
+  'N-banana Pro': 'nanoimg',
+  'Midjourney': 'midjourney',
+  'Kontext创作': 'kontext',
+  'Flux创作': 'flux',
+  'SDXL创作': 'sdxl',
+  '中文海报': 'kontext',
+};
+
+// 左侧分类菜单数据（对齐官网导航结构）
 const sideMenus = [
   {
     label: 'AI智能出图',
-    active: true,
     items: [
-      { label: '文生图', active: true },
-      { label: '图片重绘', active: false },
-      { label: '免费创作', active: false },
-      { label: '图转3D模型', active: false },
+      { label: '文生图', path: '/create/text2img' },
+      { label: '图片重绘', path: '/create/img2img' },
+      { label: '免费创作', path: '/create/text2img' },
+      { label: '图转3D模型', path: '/create/3d' },
     ],
   },
   {
     label: '大模型创作',
-    active: false,
     items: [
-      { label: 'N-banana Pro', active: false },
-      { label: 'Midjourney', active: false },
-      { label: 'Kontext创作', active: false },
-      { label: 'Flux创作', active: false },
-      { label: 'SDXL创作', active: false },
-      { label: '中文海报', active: false },
+      { label: 'N-banana Pro', path: '/create/text2img' },
+      { label: 'Midjourney', path: '/create/text2img' },
+      { label: 'Kontext创作', path: '/create/text2img' },
+      { label: 'Flux创作', path: '/create/text2img' },
+      { label: 'SDXL创作', path: '/create/text2img' },
+      { label: '中文海报', path: '/create/text2img' },
     ],
   },
 ];
@@ -52,14 +61,23 @@ const agents = [
 const Text2ImgPage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { models, styles, fetchModels, fetchStyles } = useCommonStore();
   const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [activeMenu, setActiveMenu] = useState('文生图');
   const [deepThink, setDeepThink] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [selectedModel, setSelectedModel] = useState<number | null>(null);
+  const [selectedStyle, setSelectedStyle] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const quotaBalance = Math.floor(Number(user?.quota_balance || 0));
+
+  // 页面加载时从API获取模型和画风列表
+  useEffect(() => {
+    fetchModels();
+    fetchStyles();
+  }, [fetchModels, fetchStyles]);
 
   const handleSubmit = async () => {
     if (!prompt.trim()) {
@@ -78,7 +96,21 @@ const Text2ImgPage = () => {
 
     setLoading(true);
     try {
-      const project = await createText2Img({ prompt, num_images: 1 });
+      // 如果当前选中的是大模型创作菜单，走 model_create API
+      const modelKey = menuModelMap[activeMenu];
+      let project;
+      if (modelKey) {
+        project = await createModelTask({
+          model: modelKey,
+          prompt,
+          params: {
+            ...(selectedModel ? { dhModelId: String(selectedModel) } : {}),
+            ...(selectedStyle ? { dhPaintStyle: String(selectedStyle) } : {}),
+          },
+        });
+      } else {
+        project = await createText2Img({ prompt, num_images: 1 });
+      }
       message.success('任务创建成功，正在生成中...');
       navigate('/projects', { state: { newProjectId: project.id } });
     } catch (error: any) {
@@ -329,6 +361,66 @@ const Text2ImgPage = () => {
             )}
           </div>
         </div>
+
+        {/* 模型选择（从API动态加载） */}
+        {models.length > 0 && (
+          <div style={{ marginBottom: 20, maxWidth: 520 }}>
+            <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 10 }}>
+              模型选择
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {models.map((model) => (
+                <button
+                  key={model.id}
+                  onClick={() => setSelectedModel(selectedModel === model.id ? null : model.id)}
+                  style={{
+                    padding: '6px 14px',
+                    border: selectedModel === model.id ? '1.5px solid #16a34a' : '1px solid #e5e7eb',
+                    borderRadius: 8,
+                    background: selectedModel === model.id ? '#f0fdf4' : '#fff',
+                    fontSize: 13,
+                    color: selectedModel === model.id ? '#16a34a' : '#374151',
+                    cursor: 'pointer',
+                    fontWeight: selectedModel === model.id ? 500 : 400,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {model.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 画风选择（从API动态加载） */}
+        {styles.length > 0 && (
+          <div style={{ marginBottom: 20, maxWidth: 520 }}>
+            <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 10 }}>
+              画风选择
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {styles.map((style) => (
+                <button
+                  key={style.id}
+                  onClick={() => setSelectedStyle(selectedStyle === style.id ? null : style.id)}
+                  style={{
+                    padding: '6px 14px',
+                    border: selectedStyle === style.id ? '1.5px solid #16a34a' : '1px solid #e5e7eb',
+                    borderRadius: 8,
+                    background: selectedStyle === style.id ? '#f0fdf4' : '#fff',
+                    fontSize: 13,
+                    color: selectedStyle === style.id ? '#16a34a' : '#374151',
+                    cursor: 'pointer',
+                    fontWeight: selectedStyle === style.id ? 500 : 400,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {style.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* AI 深度思考 */}
         <div style={{ marginBottom: 24, maxWidth: 520 }}>

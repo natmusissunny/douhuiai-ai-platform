@@ -61,6 +61,32 @@ def calculate_quota_cost(
         # 3D渲染成本较高 5.0
         base_cost = Decimal("5.0")
 
+    elif project_type == "architecture":
+        # 建筑室内基础成本 2.0，3D渲染/概念图稍高
+        base_cost = Decimal("2.0")
+        if subtype in ("concept", "arch_3d", "rough_to_fine"):
+            base_cost = Decimal("3.0")
+
+    elif project_type == "video":
+        # 视频成本较高
+        base_cost = Decimal("5.0")
+        if subtype == "text2voice":
+            base_cost = Decimal("1.0")  # 文生音频成本低
+        elif subtype in ("sora2video", "presenter"):
+            base_cost = Decimal("8.0")  # 高级视频成本更高
+
+    elif project_type == "ecommerce":
+        # 产品电商基础成本 2.0，一键生成类稍高
+        base_cost = Decimal("2.0")
+        if subtype in ("scene_bg", "selling_point", "virtual_tryon", "product_design"):
+            base_cost = Decimal("3.0")
+
+    elif project_type == "portrait":
+        # 人像写真基础成本 2.0，AI写真/换脸稍高
+        base_cost = Decimal("2.0")
+        if subtype in ("ai_portrait", "face_swap"):
+            base_cost = Decimal("3.0")
+
     return base_cost
 
 
