@@ -54,29 +54,6 @@ const MainLayout = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      {/* 顶部公告栏 */}
-      <div style={{
-        background: 'linear-gradient(to right, #f0fdf4, #fefce8)',
-        borderBottom: '1px solid #dcfce7',
-        textAlign: 'center',
-        padding: '6px 16px',
-        fontSize: 13,
-        color: '#4b5563',
-      }}>
-        🌸🌿 春日焕新季，充值享特惠！最高可领{' '}
-        <span style={{ color: '#ef4444', fontWeight: 600 }}>10000 豆点</span>
-        ，MJ/Banana 模型{' '}
-        <span style={{ color: '#16a34a', cursor: 'pointer' }}>免费畅玩</span>
-        <span style={{
-          marginLeft: 8, background: '#16a34a', color: '#fff',
-          fontSize: 12, padding: '2px 8px', borderRadius: 4, cursor: 'pointer',
-        }}>立即前往</span>
-        <button style={{
-          marginLeft: 16, color: '#9ca3af', background: 'none',
-          border: 'none', cursor: 'pointer', fontSize: 14,
-        }}>✕</button>
-      </div>
-
       {/* 顶部导航 */}
       <header style={{
         height: 64,

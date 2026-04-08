@@ -2,6 +2,12 @@
 Alembic Environment Configuration
 """
 
+import sys
+from pathlib import Path
+
+# 确保项目根目录在 Python 路径中，解决容器内 alembic 找不到 app 模块的问题
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
