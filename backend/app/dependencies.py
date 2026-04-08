@@ -43,9 +43,17 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # 获取用户 ID
-    user_id: Optional[int] = payload.get("sub")
-    if user_id is None:
+    # 获取用户 ID（JWT 中 sub 存储为字符串，需要转换为 int）
+    raw_user_id = payload.get("sub")
+    if raw_user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    try:
+        user_id = int(raw_user_id)
+    except (ValueError, TypeError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",

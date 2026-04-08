@@ -12,6 +12,8 @@ import {
   updateUser,
   deleteUser,
   adjustUserQuota,
+  batchCreateUsers,
+  batchDeleteUsers,
   getQuotaTransactions,
   getApiBalance,
   getRoleList,
@@ -28,6 +30,9 @@ import type {
   UserCreateData,
   UserUpdateData,
   QuotaAdjustData,
+  BatchUserCreateItem,
+  BatchUserCreateResponse,
+  BatchUserDeleteResponse,
   TransactionItem,
   ApiBalance,
   RoleItem,
@@ -81,6 +86,8 @@ interface AdminState {
   updateUser: (userId: number, data: UserUpdateData) => Promise<void>;
   deleteUser: (userId: number) => Promise<void>;
   adjustQuota: (userId: number, data: QuotaAdjustData) => Promise<void>;
+  batchCreateUsers: (users: BatchUserCreateItem[]) => Promise<BatchUserCreateResponse>;
+  batchDeleteUsers: (userIds: number[]) => Promise<BatchUserDeleteResponse>;
   fetchTransactions: (params?: {
     page?: number;
     per_page?: number;
@@ -242,6 +249,40 @@ export const useAdminStore = create<AdminState>((set) => ({
       state.fetchUsers({});
     } catch (error: any) {
       message.error(error.response?.data?.detail || '配额调整失败');
+      throw error;
+    }
+  },
+
+  batchCreateUsers: async (users) => {
+    try {
+      const response = await batchCreateUsers(users) as any;
+      if (response.fail_count === 0) {
+        message.success(`批量创建成功：${response.success_count} 个用户`);
+      } else {
+        message.warning(`创建完成：成功 ${response.success_count} 个，失败 ${response.fail_count} 个`);
+      }
+      const state = useAdminStore.getState();
+      state.fetchUsers({});
+      return response;
+    } catch (error: any) {
+      message.error(error.response?.data?.detail || '批量创建失败');
+      throw error;
+    }
+  },
+
+  batchDeleteUsers: async (userIds) => {
+    try {
+      const response = await batchDeleteUsers(userIds) as any;
+      if (response.fail_count === 0) {
+        message.success(`批量删除成功：${response.success_count} 个用户`);
+      } else {
+        message.warning(`删除完成：成功 ${response.success_count} 个，失败 ${response.fail_count} 个`);
+      }
+      const state = useAdminStore.getState();
+      state.fetchUsers({});
+      return response;
+    } catch (error: any) {
+      message.error(error.response?.data?.detail || '批量删除失败');
       throw error;
     }
   },

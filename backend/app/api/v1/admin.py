@@ -32,6 +32,10 @@ from app.schemas.admin import (
     SystemStats,
     ProjectStats,
     QuotaStats,
+    BatchUserCreate,
+    BatchUserCreateResponse,
+    BatchUserDelete,
+    BatchUserDeleteResponse,
 )
 from app.config import settings
 import httpx
@@ -396,6 +400,160 @@ async def adjust_user_quota(
         "old_balance": float(old_balance),
         "new_balance": float(user.quota_balance),
         "change": float(change),
+    }
+
+
+# ==================== 批量操作 ====================
+
+@router.post("/users/batch", response_model=BatchUserCreateResponse)
+async def batch_create_users(
+    batch_data: BatchUserCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("user.manage")),
+):
+    """
+    批量创建用户 (需要 user.manage 权限)
+
+    - 最多一次创建 50 个用户
+    - 逐条处理，单条失败不影响其他用户
+    - 返回每条记录的成功/失败详情
+    """
+    if len(batch_data.users) > 50:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="单次最多批量创建 50 个用户",
+        )
+
+    from app.utils.security import get_password_hash
+
+    results = []
+    success_count = 0
+
+    for item in batch_data.users:
+        try:
+            # 检查用户名重复
+            if db.query(User).filter(User.username == item.username).first():
+                results.append({"username": item.username, "success": False, "error": "用户名已存在"})
+                continue
+
+            # 检查邮箱重复
+            if db.query(User).filter(User.email == item.email).first():
+                results.append({"username": item.username, "success": False, "error": "邮箱已被注册"})
+                continue
+
+            # 检查角色是否存在
+            role = db.query(Role).filter(Role.id == item.role_id, Role.deleted_at == None).first()
+            if not role:
+                results.append({"username": item.username, "success": False, "error": f"角色 ID {item.role_id} 不存在"})
+                continue
+
+            # 普通管理员不能创建管理员级别账户
+            if not current_user.role.has_permission("*") and item.role_id in (1, 2):
+                results.append({"username": item.username, "success": False, "error": "无权创建管理员账户"})
+                continue
+
+            # 创建用户
+            user = User(
+                username=item.username,
+                email=item.email,
+                password_hash=get_password_hash(item.password),
+                phone=item.phone,
+                nickname=item.nickname,
+                role_id=item.role_id,
+                quota_balance=item.quota_balance,
+                status=item.status,
+                is_verified=True,
+            )
+            db.add(user)
+            db.flush()
+
+            # 如果初始配额 > 0，记录交易
+            if item.quota_balance > 0:
+                txn = QuotaTransaction(
+                    user_id=user.id,
+                    type="recharge",
+                    amount=item.quota_balance,
+                    balance_after=item.quota_balance,
+                    description="管理员批量创建用户时初始化配额",
+                    operator_id=current_user.id,
+                )
+                db.add(txn)
+
+            results.append({"username": item.username, "success": True, "user_id": user.id})
+            success_count += 1
+
+        except Exception as e:
+            # 单条失败时回滚该用户的操作
+            db.rollback()
+            results.append({"username": item.username, "success": False, "error": str(e)})
+
+    # 统一提交所有成功的记录
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"批量创建提交失败: {str(e)}")
+
+    return {
+        "total": len(batch_data.users),
+        "success_count": success_count,
+        "fail_count": len(batch_data.users) - success_count,
+        "results": results,
+    }
+
+
+@router.delete("/users/batch", response_model=BatchUserDeleteResponse)
+async def batch_delete_users(
+    batch_data: BatchUserDelete,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("user.manage")),
+):
+    """
+    批量删除用户（软删除，需要 user.manage 权限）
+
+    - 最多一次删除 50 个用户
+    - 不能删除自己
+    - 普通管理员不能删除管理员账户
+    - 返回每条记录的成功/失败详情
+    """
+    if len(batch_data.user_ids) > 50:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="单次最多批量删除 50 个用户",
+        )
+
+    from datetime import datetime as dt
+
+    results = []
+    success_count = 0
+
+    for user_id in batch_data.user_ids:
+        # 不能删除自己
+        if user_id == current_user.id:
+            results.append({"user_id": user_id, "success": False, "error": "不能删除自己的账户"})
+            continue
+
+        user = db.query(User).filter(User.id == user_id, User.deleted_at == None).first()
+        if not user:
+            results.append({"user_id": user_id, "success": False, "error": "用户不存在"})
+            continue
+
+        # 普通管理员不能删除管理员
+        if not current_user.role.has_permission("*") and user.role_id in (1, 2):
+            results.append({"user_id": user_id, "success": False, "error": "只有超管才能删除管理员账户"})
+            continue
+
+        user.deleted_at = dt.utcnow()
+        results.append({"user_id": user_id, "success": True, "username": user.username})
+        success_count += 1
+
+    db.commit()
+
+    return {
+        "total": len(batch_data.user_ids),
+        "success_count": success_count,
+        "fail_count": len(batch_data.user_ids) - success_count,
+        "results": results,
     }
 
 
@@ -850,3 +1008,68 @@ async def get_quota_stats(
         "transactions_today": transactions_today,
         "transactions_this_month": transactions_this_month,
     }
+
+
+# ==================== 任务管理 ====================
+
+@router.get("/projects")
+async def list_all_projects(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("project.manage")),
+    skip: int = 0,
+    limit: int = 20,
+    type: Optional[str] = None,
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+):
+    """
+    获取所有用户的任务列表 (需要 project.manage 权限)
+
+    - **skip**: 跳过记录数
+    - **limit**: 返回记录数
+    - **type**: 按类型筛选
+    - **status**: 按状态筛选
+    - **search**: 搜索用户名或提示词
+    """
+    if limit > 100:
+        limit = 100
+
+    query = db.query(Project).filter(Project.deleted_at == None)
+
+    if type:
+        query = query.filter(Project.type == type)
+    if status:
+        query = query.filter(Project.status == status)
+    if search:
+        # 关联用户表搜索用户名，或搜索 input_params 中的 prompt
+        query = query.join(User, Project.user_id == User.id).filter(
+            User.username.ilike(f"%{search}%")
+        )
+
+    total = query.count()
+    projects = query.order_by(Project.created_at.desc()).offset(skip).limit(limit).all()
+
+    # 组装返回数据，附带用户名
+    items = []
+    for p in projects:
+        user = db.query(User).filter(User.id == p.user_id).first()
+        prompt = (p.input_params or {}).get("prompt", "")
+        items.append({
+            "id": p.id,
+            "uuid": p.uuid,
+            "type": p.type,
+            "subtype": p.subtype,
+            "status": p.status,
+            "progress": p.progress,
+            "prompt": prompt[:50] + ("..." if len(prompt) > 50 else "") if prompt else "",
+            "username": user.username if user else "unknown",
+            "user_id": p.user_id,
+            "result_url": p.result_url,
+            "result_urls": p.result_urls,
+            "quota_cost": float(p.quota_cost),
+            "error_message": p.error_message,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+            "completed_at": p.completed_at.isoformat() if p.completed_at else None,
+        })
+
+    return {"total": total, "items": items}

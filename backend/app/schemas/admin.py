@@ -192,3 +192,51 @@ class QuotaStats(BaseModel):
     balance: Decimal
     transactions_today: int
     transactions_this_month: int
+
+
+# ==================== 批量操作 ====================
+
+class BatchUserCreateItem(BaseModel):
+    """批量创建 - 单个用户数据"""
+    username: str
+    email: EmailStr
+    password: str
+    phone: Optional[str] = None
+    nickname: Optional[str] = None
+    role_id: int
+    quota_balance: Decimal = Decimal("0")
+    status: str = "active"
+
+
+class BatchUserCreate(BaseModel):
+    """批量创建用户请求"""
+    users: List[BatchUserCreateItem]
+
+
+class BatchUserCreateResultItem(BaseModel):
+    """批量创建 - 单条结果"""
+    username: str
+    success: bool
+    user_id: Optional[int] = None
+    error: Optional[str] = None
+
+
+class BatchUserCreateResponse(BaseModel):
+    """批量创建用户响应"""
+    total: int
+    success_count: int
+    fail_count: int
+    results: List[BatchUserCreateResultItem]
+
+
+class BatchUserDelete(BaseModel):
+    """批量删除用户请求"""
+    user_ids: List[int]
+
+
+class BatchUserDeleteResponse(BaseModel):
+    """批量删除用户响应"""
+    total: int
+    success_count: int
+    fail_count: int
+    results: List[dict]

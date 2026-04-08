@@ -239,6 +239,57 @@ export const getApiBalance = () => {
   return request.get<ApiBalance>('/api/v1/admin/api-balance');
 };
 
+// ==================== 批量操作 ====================
+
+export interface BatchUserCreateItem {
+  username: string;
+  email: string;
+  password: string;
+  phone?: string;
+  nickname?: string;
+  role_id: number;
+  quota_balance?: number;
+  status?: string;
+}
+
+export interface BatchUserCreateResponse {
+  total: number;
+  success_count: number;
+  fail_count: number;
+  results: Array<{
+    username: string;
+    success: boolean;
+    user_id?: number;
+    error?: string;
+  }>;
+}
+
+export interface BatchUserDeleteResponse {
+  total: number;
+  success_count: number;
+  fail_count: number;
+  results: Array<{
+    user_id: number;
+    success: boolean;
+    username?: string;
+    error?: string;
+  }>;
+}
+
+/**
+ * 批量创建用户
+ */
+export const batchCreateUsers = (users: BatchUserCreateItem[]): Promise<BatchUserCreateResponse> => {
+  return request.post('/api/v1/admin/users/batch', { users });
+};
+
+/**
+ * 批量删除用户（软删除）
+ */
+export const batchDeleteUsers = (userIds: number[]): Promise<BatchUserDeleteResponse> => {
+  return request.delete('/api/v1/admin/users/batch', { data: { user_ids: userIds } });
+};
+
 // ==================== 角色管理 ====================
 
 /**

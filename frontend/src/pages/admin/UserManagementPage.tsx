@@ -18,6 +18,7 @@ import {
   Radio,
   Alert,
   Spin,
+  Divider,
 } from 'antd';
 import {
   SearchOutlined,
@@ -28,9 +29,11 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  UsergroupAddOutlined,
+  MinusCircleOutlined,
 } from '@ant-design/icons';
 import { useAdminStore } from '../../stores/adminStore';
-import type { UserListItem, UserCreateData, UserUpdateData, QuotaAdjustData } from '../../api/admin';
+import type { UserListItem, UserCreateData, UserUpdateData, QuotaAdjustData, BatchUserCreateItem } from '../../api/admin';
 
 const { Title } = Typography;
 
@@ -57,6 +60,8 @@ export const UserManagementPage: React.FC = () => {
     updateUser,
     deleteUser,
     adjustQuota,
+    batchCreateUsers,
+    batchDeleteUsers,
   } = useAdminStore();
 
   const [page, setPage] = useState(1);
@@ -68,11 +73,16 @@ export const UserManagementPage: React.FC = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [quotaModalVisible, setQuotaModalVisible] = useState(false);
+  const [batchCreateModalVisible, setBatchCreateModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserListItem | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [batchCreateLoading, setBatchCreateLoading] = useState(false);
+  const [batchDeleteLoading, setBatchDeleteLoading] = useState(false);
 
   const [createForm] = Form.useForm();
   const [editForm] = Form.useForm();
   const [quotaForm] = Form.useForm();
+  const [batchCreateForm] = Form.useForm();
 
   // 加载用户列表和角色列表
   useEffect(() => {
@@ -183,6 +193,73 @@ export const UserManagementPage: React.FC = () => {
     } catch {
       // 错误已在store或表单验证中处理
     }
+  };
+
+  // 批量创建用户
+  const handleOpenBatchCreate = () => {
+    batchCreateForm.resetFields();
+    // 默认给一条空记录
+    batchCreateForm.setFieldsValue({ users: [{}] });
+    setBatchCreateModalVisible(true);
+  };
+
+  const handleBatchCreate = async () => {
+    try {
+      const values = await batchCreateForm.validateFields();
+      const users: BatchUserCreateItem[] = values.users.map((u: any) => ({
+        ...u,
+        quota_balance: u.quota_balance ?? 0,
+        status: u.status ?? 'active',
+      }));
+      setBatchCreateLoading(true);
+      const result = await batchCreateUsers(users);
+      setBatchCreateLoading(false);
+
+      // 显示详细结果
+      if (result.fail_count > 0) {
+        const failDetails = result.results
+          .filter((r: any) => !r.success)
+          .map((r: any) => `${r.username}: ${r.error}`)
+          .join('\n');
+        Modal.info({
+          title: `创建完成（成功 ${result.success_count}，失败 ${result.fail_count}）`,
+          content: <pre style={{ maxHeight: 300, overflow: 'auto', fontSize: 12 }}>{failDetails}</pre>,
+        });
+      }
+      setBatchCreateModalVisible(false);
+    } catch {
+      setBatchCreateLoading(false);
+    }
+  };
+
+  // 批量删除用户
+  const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) return;
+    setBatchDeleteLoading(true);
+    try {
+      const result = await batchDeleteUsers(selectedRowKeys as number[]);
+      if (result.fail_count > 0) {
+        const failDetails = result.results
+          .filter((r: any) => !r.success)
+          .map((r: any) => `用户 ${r.user_id}: ${r.error}`)
+          .join('\n');
+        Modal.info({
+          title: `删除完成（成功 ${result.success_count}，失败 ${result.fail_count}）`,
+          content: <pre style={{ maxHeight: 300, overflow: 'auto', fontSize: 12 }}>{failDetails}</pre>,
+        });
+      }
+      setSelectedRowKeys([]);
+    } catch {
+      // 错误已在store中处理
+    } finally {
+      setBatchDeleteLoading(false);
+    }
+  };
+
+  // 表格行选择配置
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
   };
 
   // 表格列定义
@@ -338,9 +415,31 @@ export const UserManagementPage: React.FC = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Title level={2} style={{ margin: 0 }}>用户管理</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenCreate}>
-          新建用户
-        </Button>
+        <Space>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenCreate}>
+            新建用户
+          </Button>
+          <Button icon={<UsergroupAddOutlined />} onClick={handleOpenBatchCreate}>
+            批量创建
+          </Button>
+          <Popconfirm
+            title={`确认删除选中的 ${selectedRowKeys.length} 个用户？此操作不可恢复`}
+            onConfirm={handleBatchDelete}
+            okText="删除"
+            okButtonProps={{ danger: true }}
+            cancelText="取消"
+            disabled={selectedRowKeys.length === 0}
+          >
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              disabled={selectedRowKeys.length === 0}
+              loading={batchDeleteLoading}
+            >
+              批量删除{selectedRowKeys.length > 0 ? ` (${selectedRowKeys.length})` : ''}
+            </Button>
+          </Popconfirm>
+        </Space>
       </div>
 
       {/* 筛选和操作栏 */}
@@ -371,6 +470,7 @@ export const UserManagementPage: React.FC = () => {
         dataSource={users}
         rowKey="id"
         loading={userLoading}
+        rowSelection={rowSelection}
         scroll={{ x: 1400 }}
         pagination={{
           current: page,
@@ -523,6 +623,104 @@ export const UserManagementPage: React.FC = () => {
           >
             <Input.TextArea rows={3} placeholder="必填：请说明调整原因（如：测试充值、活动赠送等）" maxLength={200} />
           </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 批量创建用户弹窗 */}
+      <Modal
+        title="批量创建用户"
+        open={batchCreateModalVisible}
+        onOk={handleBatchCreate}
+        onCancel={() => setBatchCreateModalVisible(false)}
+        okText="批量创建"
+        cancelText="取消"
+        confirmLoading={batchCreateLoading}
+        width={720}
+      >
+        <Alert
+          type="info"
+          message="单次最多创建 50 个用户。所有用户将默认为已验证状态。"
+          style={{ marginBottom: 16 }}
+        />
+        <Form form={batchCreateForm} layout="vertical">
+          <Form.List name="users">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }, index) => (
+                  <div key={key}>
+                    {index > 0 && <Divider style={{ margin: '8px 0 16px' }} />}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
+                          <Form.Item
+                            {...restField}
+                            label="用户名"
+                            name={[name, 'username']}
+                            rules={[{ required: true, message: '请输入用户名' }]}
+                          >
+                            <Input placeholder="用户名" />
+                          </Form.Item>
+                          <Form.Item
+                            {...restField}
+                            label="邮箱"
+                            name={[name, 'email']}
+                            rules={[{ required: true, type: 'email', message: '请输入有效邮箱' }]}
+                          >
+                            <Input placeholder="邮箱" />
+                          </Form.Item>
+                          <Form.Item
+                            {...restField}
+                            label="密码"
+                            name={[name, 'password']}
+                            rules={[{ required: true, min: 6, message: '密码至少6位' }]}
+                          >
+                            <Input.Password placeholder="密码（至少6位）" />
+                          </Form.Item>
+                          <Form.Item
+                            {...restField}
+                            label="角色"
+                            name={[name, 'role_id']}
+                            rules={[{ required: true, message: '请选择角色' }]}
+                          >
+                            <Select
+                              placeholder="选择角色"
+                              options={(roles || []).map((r) => ({ value: r.id, label: r.name }))}
+                            />
+                          </Form.Item>
+                          <Form.Item {...restField} label="手机号" name={[name, 'phone']}>
+                            <Input placeholder="可选" />
+                          </Form.Item>
+                          <Form.Item {...restField} label="初始配额" name={[name, 'quota_balance']}>
+                            <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder="默认0" />
+                          </Form.Item>
+                        </div>
+                      </div>
+                      {fields.length > 1 && (
+                        <Button
+                          type="text"
+                          danger
+                          icon={<MinusCircleOutlined />}
+                          onClick={() => remove(name)}
+                          style={{ marginTop: 30 }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <Form.Item>
+                  <Button
+                    type="dashed"
+                    onClick={() => add()}
+                    block
+                    icon={<PlusOutlined />}
+                    disabled={fields.length >= 50}
+                  >
+                    添加用户 ({fields.length}/50)
+                  </Button>
+                </Form.Item>
+              </>
+            )}
+          </Form.List>
         </Form>
       </Modal>
     </div>
