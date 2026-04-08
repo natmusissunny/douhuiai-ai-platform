@@ -1120,7 +1120,7 @@ services:
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=douhuiai
+      - POSTGRES_DB=douhuiai_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
