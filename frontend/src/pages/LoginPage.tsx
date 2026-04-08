@@ -129,38 +129,6 @@ const LoginPage = () => {
         </div>
       </form>
 
-      {/* 分割线 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0 20px' }}>
-        <div style={{ flex: 1, height: 1, background: '#f0f0f0' }} />
-        <span style={{ fontSize: 12, color: '#9ca3af' }}>或使用测试账号</span>
-        <div style={{ flex: 1, height: 1, background: '#f0f0f0' }} />
-      </div>
-
-      {/* 快捷填充测试账号 */}
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button
-          type="button"
-          onClick={() => { setUsername('testuser'); setPassword('Test@123456'); }}
-          style={{
-            flex: 1, padding: '8px', border: '1px solid #e5e7eb',
-            borderRadius: 6, background: '#f9fafb', fontSize: 12,
-            color: '#6b7280', cursor: 'pointer',
-          }}
-        >
-          普通用户
-        </button>
-        <button
-          type="button"
-          onClick={() => { setUsername('admin'); setPassword('Admin@123456'); }}
-          style={{
-            flex: 1, padding: '8px', border: '1px solid #e5e7eb',
-            borderRadius: 6, background: '#f9fafb', fontSize: 12,
-            color: '#6b7280', cursor: 'pointer',
-          }}
-        >
-          管理员
-        </button>
-      </div>
     </div>
   );
 };
