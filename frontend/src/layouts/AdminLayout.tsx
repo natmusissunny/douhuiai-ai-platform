@@ -103,7 +103,7 @@ export const AdminLayout: React.FC = () => {
       icon: <LogoutOutlined />,
       onClick: () => {
         clearAuth();
-        navigate('/login');
+        navigate('/auth/login');
       },
     },
   ];

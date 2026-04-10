@@ -145,16 +145,12 @@ services:
     restart: unless-stopped
     command: celery -A app.tasks.celery_app beat --loglevel=info --schedule=/app/celerybeat-data/celerybeat-schedule
 
-  # 前端
+  # 前端（Docker 部署走 nginx 代理，VITE_API_BASE_URL 必须为空）
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
     container_name: douhuiai-frontend
-    environment:
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:

@@ -45,18 +45,15 @@ request.interceptors.response.use(
 
       switch (status) {
         case 401:
-          // Token 过期或无效
+          // Token 过期或无效，清除登录态并跳转登录页
           message.error('登录已过期，请重新登录');
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
+          window.location.href = '/auth/login';
           break;
         case 403:
-          // 未登录时后端也可能返回 403，统一跳转登录页
-          message.error('请先登录后再操作');
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          window.location.href = '/auth/login';
+          // 权限不足（不清除 token，用户仍是登录状态）
+          message.error(data?.detail || '权限不足');
           break;
         case 404:
           message.error('请求的资源不存在');
@@ -65,7 +62,7 @@ request.interceptors.response.use(
           message.error('服务器错误，请稍后重试');
           break;
         default:
-          message.error(data?.message || '请求失败');
+          message.error(data?.detail || data?.message || '请求失败');
       }
     } else {
       message.error('网络错误，请检查网络连接');
