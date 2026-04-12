@@ -22,13 +22,16 @@
 
 ## 项目概述
 
-豆绘AI平台是一个全栈 AI 创作平台，集成了豆绘AI API，提供文生图、图生图、图片编辑、3D渲染等功能，并附带完整的管理后台。
+豆绘AI平台是一个全栈 AI 图片编辑平台，集成豆绘AI API，提供高清放大、高清重绘、AI扩图等核心编辑功能，并附带完整的管理后台。
 
 **技术栈：**
 - 前端：React 18 + TypeScript + Ant Design 6 + Vite
 - 后端：FastAPI (Python 3.10) + SQLAlchemy + Celery
-- 数据库：PostgreSQL 14 + Redis 7
+- 数据库：PostgreSQL 14 + Redis 6.2（阿里云优化版）
 - 部署：Docker + Docker Compose
+
+**Docker 镜像源说明：**
+- Redis、Node.js 基础镜像使用阿里云镜像仓库，后端 apt/pip 源使用 `mirrors.aliyun.com`，确保国内环境构建速度。
 
 ---
 
