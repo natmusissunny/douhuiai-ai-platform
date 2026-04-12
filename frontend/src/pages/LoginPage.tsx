@@ -3,7 +3,7 @@
  */
 import { useState } from 'react';
 import { message } from 'antd';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { login, getCurrentUser } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
 
@@ -83,10 +83,9 @@ const LoginPage = () => {
 
         {/* 密码 */}
         <div style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <label style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>密码</label>
-            <span style={{ fontSize: 12, color: '#16a34a', cursor: 'pointer' }}>忘记密码？</span>
-          </div>
+          <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6, fontWeight: 500 }}>
+            密码
+          </label>
           <input
             type="password"
             value={password}
@@ -120,13 +119,6 @@ const LoginPage = () => {
           {loading ? '登录中...' : '登 录'}
         </button>
 
-        {/* 注册链接 */}
-        <div style={{ textAlign: 'center', fontSize: 13, color: '#6b7280' }}>
-          还没有账号？{' '}
-          <Link to="/auth/register" style={{ color: '#16a34a', fontWeight: 500, textDecoration: 'none' }}>
-            立即注册
-          </Link>
-        </div>
       </form>
 
     </div>
