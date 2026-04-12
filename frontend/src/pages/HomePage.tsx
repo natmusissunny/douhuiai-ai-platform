@@ -18,7 +18,6 @@ const navItems = [
       </svg>
     ),
     path: '/create/edit',
-    sub: [],
   },
   {
     label: '图片精修',
@@ -29,7 +28,6 @@ const navItems = [
       </svg>
     ),
     path: '/create/edit',
-    sub: [],
   },
   {
     label: 'PS场景融合',
@@ -40,7 +38,6 @@ const navItems = [
       </svg>
     ),
     path: '/create/edit',
-    sub: [],
   },
   {
     label: '长图拼图',
@@ -51,7 +48,6 @@ const navItems = [
       </svg>
     ),
     path: '/create/edit',
-    sub: [],
   },
   {
     label: '我的作品',
@@ -62,7 +58,6 @@ const navItems = [
       </svg>
     ),
     path: '/projects',
-    sub: [],
   },
 ];
 
@@ -96,116 +91,53 @@ const features = [
 const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
-  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
-  const [activeNav, setActiveNav] = useState('AI创作');
+  const [activeNav, setActiveNav] = useState('图片编辑器');
 
   return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 88px)', background: '#f5f5f5' }}>
 
-      {/* 左侧导航 — 对齐官网：选中项左侧绿色竖条，hover 弹出子菜单 */}
+      {/* 左侧导航 */}
       <aside style={{
         width: 108,
         background: '#fff',
         borderRight: '1px solid #f0f0f0',
         flexShrink: 0,
         paddingTop: 8,
-        position: 'relative',
-        zIndex: 100,
       }}>
         {navItems.map((item) => {
           const isActive = activeNav === item.label;
-          const isHovered = hoveredNav === item.label;
           return (
-            <div
+            <button
               key={item.label}
-              style={{ position: 'relative' }}
-              onMouseEnter={() => setHoveredNav(item.label)}
-              onMouseLeave={() => setHoveredNav(null)}
+              onClick={() => { setActiveNav(item.label); navigate(item.path); }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                width: '100%',
+                height: 38,
+                padding: '0 10px 0 14px',
+                border: 'none',
+                background: isActive ? '#f0fdf4' : 'transparent',
+                cursor: 'pointer',
+                color: isActive ? '#16a34a' : '#252628',
+                fontSize: 13,
+                fontWeight: isActive ? 500 : 400,
+                textAlign: 'left',
+                transition: 'all 0.15s',
+                borderLeft: isActive ? '3px solid #16a34a' : '3px solid transparent',
+              }}
             >
-              {/* 菜单项 */}
-              <button
-                onClick={() => { setActiveNav(item.label); navigate(item.path); }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  width: '100%',
-                  height: 38,
-                  padding: '0 10px 0 14px',
-                  border: 'none',
-                  background: isActive ? '#f0fdf4' : isHovered ? '#f9fafb' : 'transparent',
-                  cursor: 'pointer',
-                  color: isActive ? '#16a34a' : '#252628',
-                  fontSize: 13,
-                  fontWeight: isActive ? 500 : 400,
-                  textAlign: 'left',
-                  transition: 'all 0.15s',
-                  borderLeft: isActive ? '3px solid #16a34a' : '3px solid transparent',
-                  position: 'relative',
-                }}
-              >
-                <span style={{
-                  display: 'flex', alignItems: 'center', flexShrink: 0,
-                  color: isActive ? '#16a34a' : '#606266',
-                }}>
-                  {item.icon}
-                </span>
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {item.label}
-                </span>
-                {item.sub.length > 0 && (
-                  <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0 }}>›</span>
-                )}
-              </button>
-
-              {/* 悬停弹出二级菜单 */}
-              {item.sub.length > 0 && isHovered && (
-                <div style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: '100%',
-                  background: '#fff',
-                  borderRadius: 8,
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
-                  border: '1px solid #eee',
-                  minWidth: 140,
-                  zIndex: 200,
-                  padding: '6px 0',
-                }}>
-                  {item.sub.map((sub) => (
-                    <button
-                      key={sub.label}
-                      onClick={() => { setHoveredNav(null); navigate(sub.path); }}
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '0 20px',
-                        height: 38,
-                        lineHeight: '38px',
-                        border: 'none',
-                        background: 'none',
-                        color: '#252628',
-                        fontSize: 13,
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        transition: 'all 0.1s',
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background = '#f0fdf4';
-                        (e.currentTarget as HTMLButtonElement).style.color = '#16a34a';
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background = 'none';
-                        (e.currentTarget as HTMLButtonElement).style.color = '#252628';
-                      }}
-                    >
-                      {sub.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+              <span style={{
+                display: 'flex', alignItems: 'center', flexShrink: 0,
+                color: isActive ? '#16a34a' : '#606266',
+              }}>
+                {item.icon}
+              </span>
+              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {item.label}
+              </span>
+            </button>
           );
         })}
       </aside>
@@ -270,7 +202,7 @@ const HomePage = () => {
                 <Button
                   type="primary"
                   style={{ background: '#16a34a', borderColor: '#16a34a', borderRadius: 8, fontWeight: 500 }}
-                  onClick={() => navigate(isAuthenticated ? '/create/text2img' : '/auth/login')}
+                  onClick={() => navigate(isAuthenticated ? '/create/edit' : '/auth/login')}
                 >提交创作分析 ✦</Button>
               </div>
             </div>
