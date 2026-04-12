@@ -13,10 +13,13 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # 安装系统依赖
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN echo "deb http://mirrors.aliyun.com/debian bullseye main contrib non-free" > /etc/apt/sources.list \
+ && echo "deb http://mirrors.aliyun.com/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list \
+ && echo "deb http://mirrors.aliyun.com/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list \
+ && apt-get clean \
+ && apt-get update \
+ && apt-get install -y build-essential libpq-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 # 阶段2: 依赖安装
 FROM base as dependencies
@@ -25,7 +28,7 @@ FROM base as dependencies
 COPY requirements.txt .
 
 # 安装Python依赖
-RUN pip install --user -r requirements.txt
+RUN pip install --user --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple -r requirements.txt
 
 # 阶段3: 最终镜像
 FROM base
