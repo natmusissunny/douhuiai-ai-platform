@@ -7,42 +7,8 @@ import { Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 
-// 左侧导航数据（对齐官网结构）
+// 左侧导航数据（精简版：编辑应用 + 产品电商 + 图片库 + 我的作品）
 const navItems = [
-  {
-    label: 'Agent',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="7" r="3"/>
-        <line x1="8" y1="11" x2="8" y2="21"/><line x1="16" y1="11" x2="16" y2="21"/>
-      </svg>
-    ),
-    path: '/create/text2img',
-    sub: [],
-  },
-  {
-    label: 'AI创作',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-        <polyline points="21 15 16 10 5 21"/>
-      </svg>
-    ),
-    path: '/create/text2img',
-    sub: [
-      { label: '文生图', path: '/create/text2img' },
-      { label: '图片重绘', path: '/create/img2img' },
-      { label: 'AI智能出图', path: '/create/text2img' },
-      { label: '免费创作', path: '/create/text2img' },
-      { label: '图转3D模型', path: '/create/3d' },
-      { label: 'N-banana Pro', path: '/create/text2img' },
-      { label: 'Midjourney', path: '/create/text2img' },
-      { label: 'Kontext创作', path: '/create/text2img' },
-      { label: 'Flux创作', path: '/create/text2img' },
-      { label: 'SDXL创作', path: '/create/text2img' },
-      { label: '中文海报', path: '/create/text2img' },
-    ],
-  },
   {
     label: '编辑应用',
     icon: (
@@ -53,20 +19,9 @@ const navItems = [
     ),
     path: '/create/edit',
     sub: [
-      { label: '万能改图', path: '/create/edit' },
       { label: '图片精修', path: '/create/edit' },
-      { label: '编辑应用', path: '/create/edit' },
-      { label: '多图融合', path: '/create/edit' },
-      { label: '相似图生成', path: '/create/edit' },
-      { label: '描述词反推', path: '/create/edit' },
       { label: 'PS场景融合', path: '/create/edit' },
-      { label: '图片视角调整', path: '/create/edit' },
       { label: '批量抠图', path: '/create/edit' },
-      { label: '3d模型渲染', path: '/create/3d' },
-      { label: '线稿渲染', path: '/create/edit' },
-      { label: '风格材质更换', path: '/create/edit' },
-      { label: 'PNG素材生成', path: '/create/edit' },
-      { label: '人物多姿势', path: '/create/edit' },
     ],
   },
   {
@@ -90,86 +45,6 @@ const navItems = [
       { label: '场景加模特', path: '/create/ecommerce' },
       { label: 'AI产品设计', path: '/create/ecommerce' },
     ],
-  },
-  {
-    label: '视频创作',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>
-      </svg>
-    ),
-    path: '/create/video',
-    sub: [
-      { label: '文生视频', path: '/create/video' },
-      { label: '图生视频', path: '/create/video' },
-      { label: '首尾帧', path: '/create/video' },
-      { label: 'Sora2视频', path: '/create/video' },
-      { label: '数字人口播', path: '/create/video' },
-      { label: '文生视频(音频版)', path: '/create/video' },
-      { label: '图生视频(音频版)', path: '/create/video' },
-      { label: '文生音频', path: '/create/video' },
-    ],
-  },
-  {
-    label: '建筑室内',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-        <polyline points="9 22 9 12 15 12 15 22"/>
-      </svg>
-    ),
-    path: '/create/architecture',
-    sub: [
-      { label: '效果图后期', path: '/create/architecture' },
-      { label: '效果图增强', path: '/create/architecture' },
-      { label: 'AI概念图', path: '/create/architecture' },
-      { label: '软硬装替换', path: '/create/architecture' },
-      { label: '风格转换', path: '/create/architecture' },
-      { label: '彩平图', path: '/create/architecture' },
-    ],
-  },
-  {
-    label: '人像写真',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-        <circle cx="12" cy="13" r="4"/>
-      </svg>
-    ),
-    path: '/create/portrait',
-    sub: [
-      { label: '人像换脸', path: '/create/portrait' },
-      { label: '老照片修复', path: '/create/portrait' },
-      { label: '人像变清晰', path: '/create/portrait' },
-      { label: '照片上色', path: '/create/portrait' },
-      { label: 'AI证件照', path: '/create/portrait' },
-      { label: 'AI写真/形象照', path: '/create/portrait' },
-      { label: 'AI换发型', path: '/create/portrait' },
-      { label: '真人转漫画', path: '/create/portrait' },
-    ],
-  },
-  {
-    label: '批量生成',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="2" y="3" width="6" height="6" rx="1"/><rect x="9" y="3" width="6" height="6" rx="1"/>
-        <rect x="16" y="3" width="6" height="6" rx="1"/><rect x="2" y="12" width="6" height="6" rx="1"/>
-        <rect x="9" y="12" width="6" height="6" rx="1"/><rect x="16" y="12" width="6" height="6" rx="1"/>
-      </svg>
-    ),
-    path: '/create/text2img',
-    sub: [],
-  },
-  {
-    label: '模型训练',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
-      </svg>
-    ),
-    path: '/create/text2img',
-    sub: [],
   },
   {
     label: '图片库',
@@ -197,21 +72,9 @@ const navItems = [
 
 const features = [
   {
-    icon: '🎨', title: 'AI图像创作', path: '/create/text2img',
-    desc: '全量模型多种模式，轻松创作',
-    tags: ['AI智能出图', '图转3D模型', 'N-banana', '免费创作'],
-    bg: '#EEF6FF', iconBg: '#3B82F6',
-  },
-  {
-    icon: '🎬', title: 'AI视频创作', path: '/create/video',
-    desc: '告别复杂剪辑，AI一键成片',
-    tags: ['图生视频', '首尾帧', '文生视频', 'Veo视频创作'],
-    bg: '#F5F0FF', iconBg: '#8B5CF6',
-  },
-  {
     icon: '✏️', title: '编辑应用', path: '/create/edit',
-    desc: '智能抠图、背景替换、风格转换',
-    tags: ['AI抠图', '换背景', '万物消除', '去水印'],
+    desc: '图片精修、场景融合、批量抠图',
+    tags: ['图片精修', 'PS场景融合', '批量抠图'],
     bg: '#F0FFF4', iconBg: '#10B981',
   },
   {
@@ -226,7 +89,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
-  const [activeNav, setActiveNav] = useState('Agent');
+  const [activeNav, setActiveNav] = useState('编辑应用');
 
   return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 88px)', background: '#f5f5f5' }}>
@@ -340,81 +203,34 @@ const HomePage = () => {
         <div style={{
           background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 50%, #fefce8 100%)',
           borderRadius: 16,
-          padding: '40px 32px',
+          padding: '48px 32px',
           marginBottom: 24,
           border: '1px solid #dcfce7',
           textAlign: 'center',
         }}>
           <h1 style={{ fontSize: 36, fontWeight: 700, color: '#1a1a1a', marginBottom: 8 }}>
-            豆绘 · Agent，<span style={{ color: '#16a34a' }}>让想象自动落地</span>
+            豆绘AI，<span style={{ color: '#16a34a' }}>智能图片编辑</span>
           </h1>
-          <p style={{ color: '#6b7280', fontSize: 16, marginBottom: 24 }}>
-            智能解析需求，自动生成任务，自由无限拓展
+          <p style={{ color: '#6b7280', fontSize: 16, marginBottom: 28 }}>
+            图片精修、场景融合、批量抠图、产品电商，一站式图片处理工具
           </p>
-
-          {/* 输入框卡片 */}
-          <div style={{
-            background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb',
-            padding: '16px 20px', maxWidth: 700, margin: '0 auto',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.06)', textAlign: 'left',
-          }}>
-            <div style={{ display: 'flex', gap: 20, marginBottom: 12, borderBottom: '1px solid #f0f0f0', paddingBottom: 10 }}>
-              {['图像创作', '视频创作', '文案创作'].map((tab, i) => (
-                <button key={tab} style={{
-                  border: 'none', background: 'none', cursor: 'pointer',
-                  fontSize: 14, padding: '0 0 4px',
-                  color: i === 0 ? '#16a34a' : '#9ca3af',
-                  borderBottom: i === 0 ? '2px solid #16a34a' : '2px solid transparent',
-                  fontWeight: i === 0 ? 600 : 400,
-                }}>{tab}</button>
-              ))}
-            </div>
-            <textarea
-              style={{
-                width: '100%', border: 'none', outline: 'none', resize: 'none',
-                fontSize: 14, color: '#9ca3af', minHeight: 60, background: 'transparent',
-                fontFamily: 'inherit',
-              }}
-              placeholder="例如：生成 6 张同风格延展图，保持空间结构一致，细节更..."
-            />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-              <button style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 12px',
-                background: '#fafafa', cursor: 'pointer', color: '#6b7280', fontSize: 12, gap: 2,
-              }}>
-                <span style={{ fontSize: 16 }}>↑</span><span>上传</span>
-              </button>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <button style={{
-                  fontSize: 13, color: '#6b7280', background: '#f3f4f6',
-                  border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 4,
-                }}>🤖 通用创作Ag... ▾</button>
-                <Button
-                  type="primary"
-                  style={{ background: '#16a34a', borderColor: '#16a34a', borderRadius: 8, fontWeight: 500 }}
-                  onClick={() => navigate(isAuthenticated ? '/create/text2img' : '/auth/login')}
-                >提交创作分析 ✦</Button>
-              </div>
-            </div>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <Button
+              type="primary"
+              size="large"
+              style={{ background: '#16a34a', borderColor: '#16a34a', borderRadius: 8, fontWeight: 500 }}
+              onClick={() => navigate(isAuthenticated ? '/create/edit' : '/auth/login')}
+            >开始编辑图片</Button>
+            <Button
+              size="large"
+              style={{ borderRadius: 8 }}
+              onClick={() => navigate(isAuthenticated ? '/create/ecommerce' : '/auth/login')}
+            >产品电商</Button>
           </div>
         </div>
 
         {/* 副标题 */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: '#374151' }}>开始你的创意</h2>
-          <input
-            style={{
-              fontSize: 13, border: '1px solid #e5e7eb', borderRadius: 8,
-              padding: '6px 12px', outline: 'none', color: '#9ca3af', width: 180,
-            }}
-            placeholder="请输入关键词搜索功能"
-          />
-        </div>
-        <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 16 }}>
-          输入一句话让AI帮你绘图，按enter发送，ctrl+enter换行。
-        </p>
+        <h2 style={{ fontSize: 16, fontWeight: 600, color: '#374151', marginBottom: 16 }}>核心功能</h2>
 
         {/* 功能卡片 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
