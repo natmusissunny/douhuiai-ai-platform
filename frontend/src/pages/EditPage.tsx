@@ -1,5 +1,5 @@
 /**
- * 编辑应用页面 - 豆绘AI风格
+ * 编辑应用页面 - 豆绘AI精简版
  * 对应后端 POST /api/v1/projects/edit
  */
 import { useState, useRef } from 'react';
@@ -8,66 +8,22 @@ import { useNavigate } from 'react-router-dom';
 import { createImageEdit } from '../api/project';
 import { useAuthStore } from '../stores/authStore';
 
-// 换风格可选 Lora 模板
-const loraOptions = [
-  { label: '动漫风', value: 'anime' },
-  { label: '写实照片', value: 'realistic' },
-  { label: '油画风', value: 'oil_painting' },
-  { label: '水彩画', value: 'watercolor' },
-  { label: '赛博朋克', value: 'cyberpunk' },
-  { label: '素描风', value: 'sketch' },
+// 左侧菜单（精简版只保留4个入口）
+const sideMenuItems = [
+  { label: '图片编辑器', editType: 'upscale' },
+  { label: '图片精修', editType: 'hd_repaint' },
+  { label: 'PS场景融合', editType: 'outpaint' },
+  { label: '长图拼图', editType: 'long_image' },
 ];
 
-// 左侧菜单（editType 对齐后端 EDIT_TYPE_MAP + EDIT_TYPE_MAP_EXTENDED）
-const sideMenus = [
-  {
-    label: '图片编辑器',
-    items: [
-      { label: '万能改图', editType: 'universal_edit' },
-      { label: '图片精修', editType: 'img_refine' },
-      { label: '多图融合', editType: 'multi_merge' },
-      { label: '相似图生成', editType: 'similar_gen' },
-      { label: '描述词反推', editType: 'reverse_prompt' },
-      { label: '图片视角调整', editType: 'universal_edit' },
-      { label: '批量抠图', editType: 'remove_bg' },
-    ],
-  },
-  {
-    label: '编辑工具',
-    items: [
-      { label: '3D模型渲染', editType: 'model_render' },
-      { label: '线稿渲染', editType: 'line_render_edit' },
-      { label: '风格材质更换', editType: 'style_material' },
-      { label: 'PNG素材生成', editType: 'png_gen' },
-      { label: '人物多姿势', editType: 'multi_pose' },
-      { label: '真人转漫画', editType: 'people2cartoon' },
-    ],
-  },
-];
-
-// 编辑功能列表（主区域 grid）
+// 编辑功能列表（主区域 grid，只保留3个）
 const editFunctions = [
-  { label: '高清放大', editType: 'upscale', active: true },
+  { label: '高清放大', editType: 'upscale' },
   { label: '高清重绘', editType: 'hd_repaint' },
   { label: 'AI扩图', editType: 'outpaint' },
-  { label: 'AI抠图', editType: 'remove_bg' },
-  { label: '换背景', editType: 'change_bg' },
-  { label: '图片裁剪', editType: 'crop' },
-  { label: '比例调整', editType: 'ratio' },
-  { label: '万物消除', editType: 'inpaint' },
-  { label: '局部修改', editType: 'local_edit' },
-  { label: '局部修复', editType: 'local_repair' },
-  { label: '万物替换', editType: 'replace' },
-  { label: '换风格', editType: 'style_transfer' },
-  { label: '一键美化', editType: 'beautify' },
-  { label: '变清晰', editType: 'sharpen' },
-  { label: '图片转线稿', editType: 'to_sketch' },
-  { label: '精准提取线稿', editType: 'extract_line' },
-  { label: '图片去色', editType: 'decolor' },
-  { label: '去Logo/文字', editType: 'remove_text' },
-  { label: '万能改图', editType: 'universal_edit' },
 ];
 
+// 高清放大模式
 const upscaleModes = ['通用模式', '超清增强', '真实照片', '动漫图片', '细节增强'];
 
 const EditPage = () => {
@@ -79,17 +35,7 @@ const EditPage = () => {
   const [activeMode, setActiveMode] = useState('通用模式');
   const [imageUrl, setImageUrl] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
-  // 换背景：背景描述
-  const [bgPrompt, setBgPrompt] = useState('');
-  // 换风格：Lora 模板
-  const [loraType, setLoraType] = useState('anime');
-  // 万物替换：蒙版图片（标记要替换的区域）
-  const [maskUrl, setMaskUrl] = useState('');
-  const [maskPreviewUrl, setMaskPreviewUrl] = useState('');
-  // 万物替换：替换描述
-  const [replacePrompt, setReplacePrompt] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const maskInputRef = useRef<HTMLInputElement>(null);
   const quotaBalance = Math.floor(Number(user?.quota_balance || 0));
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,33 +47,11 @@ const EditPage = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleMaskFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setMaskPreviewUrl(URL.createObjectURL(file));
-    const reader = new FileReader();
-    reader.onload = (ev) => setMaskUrl(ev.target?.result as string);
-    reader.readAsDataURL(file);
-  };
-
   const handleSubmit = async () => {
     if (!imageUrl) { message.warning('请先上传图片'); return; }
-    // 各功能的额外参数校验
-    if (activeEdit === 'change_bg' && !bgPrompt.trim()) {
-      message.warning('请输入背景描述'); return;
-    }
-    if (activeEdit === 'replace' && !maskUrl) {
-      message.warning('请上传蒙版图片（标记要替换的区域）'); return;
-    }
 
     // 构建额外参数
     const extraParams: Record<string, any> = { mode: activeMode };
-    if (activeEdit === 'change_bg') extraParams.dhPrompt = bgPrompt;
-    if (activeEdit === 'style_transfer') extraParams.dhLoraType = loraType;
-    if (activeEdit === 'replace') {
-      extraParams.dhMaskImg = maskUrl;
-      extraParams.dhPrompt = replacePrompt;
-    }
 
     setLoading(true);
     try {
@@ -152,29 +76,22 @@ const EditPage = () => {
         width: 160, background: '#fff', borderRight: '1px solid #f0f0f0',
         flexShrink: 0, overflowY: 'auto', paddingTop: 8,
       }}>
-        {sideMenus.map((group) => (
-          <div key={group.label}>
-            <div style={{ padding: '8px 16px 4px', fontSize: 11, color: '#9ca3af', fontWeight: 500 }}>
-              {group.label}
-            </div>
-            {group.items.map((item) => (
-              <button
-                key={item.label}
-                onClick={() => { setActiveMenu(item.label); setActiveEdit(item.editType); }}
-                style={{
-                  display: 'block', width: '100%', textAlign: 'left',
-                  padding: '8px 16px', border: 'none',
-                  background: activeMenu === item.label ? '#f0fdf4' : 'none',
-                  color: activeMenu === item.label ? '#16a34a' : '#374151',
-                  fontSize: 13, cursor: 'pointer',
-                  fontWeight: activeMenu === item.label ? 500 : 400,
-                  borderRight: activeMenu === item.label ? '2px solid #16a34a' : '2px solid transparent',
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+        {sideMenuItems.map((item) => (
+          <button
+            key={item.label}
+            onClick={() => { setActiveMenu(item.label); setActiveEdit(item.editType); }}
+            style={{
+              display: 'block', width: '100%', textAlign: 'left',
+              padding: '10px 16px', border: 'none',
+              background: activeMenu === item.label ? '#f0fdf4' : 'none',
+              color: activeMenu === item.label ? '#16a34a' : '#374151',
+              fontSize: 13, cursor: 'pointer',
+              fontWeight: activeMenu === item.label ? 500 : 400,
+              borderRight: activeMenu === item.label ? '2px solid #16a34a' : '2px solid transparent',
+            }}
+          >
+            {item.label}
+          </button>
         ))}
       </aside>
 
@@ -266,87 +183,6 @@ const EditPage = () => {
             </div>
           )}
 
-          {/* 换背景：背景描述输入（必填） */}
-          {activeEdit === 'change_bg' && (
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 8 }}>
-                * 背景描述 <span style={{ color: '#ef4444', fontSize: 12 }}>（必填）</span>
-              </div>
-              <textarea
-                value={bgPrompt}
-                onChange={(e) => setBgPrompt(e.target.value)}
-                placeholder="描述你想要的新背景，例如：海边沙滩、城市夜景、简约白色背景..."
-                style={{
-                  width: '100%', minHeight: 80, padding: '10px 14px',
-                  border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 13,
-                  color: '#374151', resize: 'vertical', outline: 'none',
-                  fontFamily: 'inherit', boxSizing: 'border-box',
-                }}
-                onFocus={(e) => { e.target.style.borderColor = '#16a34a'; }}
-                onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; }}
-              />
-            </div>
-          )}
-
-          {/* 换风格：Lora 模板选择（必选） */}
-          {activeEdit === 'style_transfer' && (
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 12 }}>
-                * 选择风格模板 <span style={{ color: '#ef4444', fontSize: 12 }}>（必选）</span>
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {loraOptions.map((lora) => (
-                  <button
-                    key={lora.value}
-                    onClick={() => setLoraType(lora.value)}
-                    style={{
-                      padding: '8px 20px', border: `1.5px solid ${loraType === lora.value ? '#16a34a' : '#e5e7eb'}`,
-                      borderRadius: 8, background: loraType === lora.value ? '#f0fdf4' : '#fff',
-                      color: loraType === lora.value ? '#16a34a' : '#374151',
-                      fontSize: 13, cursor: 'pointer', fontWeight: loraType === lora.value ? 500 : 400,
-                    }}
-                  >
-                    {lora.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 万物替换：蒙版上传 + 替换描述 */}
-          {activeEdit === 'replace' && (
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 8 }}>
-                * 蒙版图片 <span style={{ color: '#ef4444', fontSize: 12 }}>（必选，标记要替换的区域）</span>
-              </div>
-              <input ref={maskInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleMaskFileChange} />
-              {maskPreviewUrl ? (
-                <div onClick={() => maskInputRef.current?.click()} style={{ border: '1.5px dashed #d1d5db', borderRadius: 8, padding: 8, cursor: 'pointer', maxWidth: 200 }}>
-                  <img src={maskPreviewUrl} alt="mask" style={{ width: '100%', borderRadius: 6, display: 'block' }} />
-                  <div style={{ textAlign: 'center', fontSize: 11, color: '#9ca3af', marginTop: 4 }}>点击替换</div>
-                </div>
-              ) : (
-                <div onClick={() => maskInputRef.current?.click()} style={{ border: '1.5px dashed #d1d5db', borderRadius: 8, padding: '20px 16px', textAlign: 'center', cursor: 'pointer', maxWidth: 200 }}>
-                  <div style={{ fontSize: 22, color: '#9ca3af', marginBottom: 4 }}>↑</div>
-                  <div style={{ fontSize: 13, color: '#374151' }}>上传蒙版图片</div>
-                </div>
-              )}
-              <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 8, marginTop: 16 }}>
-                替换描述 <span style={{ fontSize: 12, color: '#9ca3af' }}>（可选）</span>
-              </div>
-              <input
-                value={replacePrompt}
-                onChange={(e) => setReplacePrompt(e.target.value)}
-                placeholder="描述替换成什么，例如：一只猫、红色跑车..."
-                style={{
-                  width: '100%', padding: '10px 14px', border: '1px solid #e5e7eb',
-                  borderRadius: 8, fontSize: 13, color: '#374151', outline: 'none', boxSizing: 'border-box',
-                }}
-                onFocus={(e) => { e.target.style.borderColor = '#16a34a'; }}
-                onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; }}
-              />
-            </div>
-          )}
         </div>
 
         {/* 右侧预览区 */}
