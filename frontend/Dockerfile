@@ -11,8 +11,8 @@ USER root
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies（使用淘宝镜像加速）
+RUN npm config set registry https://registry.npmmirror.com && npm install
 
 # Copy source code
 COPY . .
