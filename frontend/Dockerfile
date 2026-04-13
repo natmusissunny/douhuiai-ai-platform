@@ -1,7 +1,7 @@
 # Multi-stage build for frontend
 
 # Stage 1: Build
-FROM alibaba-cloud-linux-3-registry.cn-hangzhou.cr.aliyuncs.com/alinux3/node:20.16 AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
