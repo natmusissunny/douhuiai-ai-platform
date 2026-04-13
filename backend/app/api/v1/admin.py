@@ -1010,6 +1010,65 @@ async def get_quota_stats(
     }
 
 
+@router.get("/statistics/user-quota")
+async def get_user_quota_usage(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("stats.view")),
+):
+    """
+    获取每个用户的配额使用详情（充值总额、消耗总额、当前余额）
+    """
+    users = db.query(User).filter(User.deleted_at == None).all()
+    user_ids = [u.id for u in users]
+
+    # 批量查每个用户的充值总额和消耗总额
+    recharged_rows = (
+        db.query(
+            QuotaTransaction.user_id,
+            func.sum(QuotaTransaction.amount),
+        )
+        .filter(QuotaTransaction.user_id.in_(user_ids), QuotaTransaction.type == "recharge")
+        .group_by(QuotaTransaction.user_id)
+        .all()
+    )
+    consumed_rows = (
+        db.query(
+            QuotaTransaction.user_id,
+            func.sum(QuotaTransaction.amount),
+        )
+        .filter(QuotaTransaction.user_id.in_(user_ids), QuotaTransaction.type == "consume")
+        .group_by(QuotaTransaction.user_id)
+        .all()
+    )
+
+    recharged_map = {uid: float(abs(amt)) for uid, amt in recharged_rows}
+    consumed_map = {uid: float(abs(amt)) for uid, amt in consumed_rows}
+
+    # 查角色名
+    from app.models.role import Role
+    role_map = {r.id: r.name for r in db.query(Role.id, Role.name).all()}
+
+    items = []
+    for u in users:
+        total_recharged = recharged_map.get(u.id, 0.0)
+        total_consumed = consumed_map.get(u.id, 0.0)
+        items.append({
+            "user_id": u.id,
+            "username": u.username,
+            "email": u.email,
+            "role": role_map.get(u.role_id, "unknown"),
+            "status": u.status,
+            "total_recharged": total_recharged,
+            "total_consumed": total_consumed,
+            "quota_balance": float(u.quota_balance),
+        })
+
+    # 按余额降序排列
+    items.sort(key=lambda x: x["quota_balance"], reverse=True)
+
+    return {"items": items}
+
+
 # ==================== 任务管理 ====================
 
 @router.get("/projects")
