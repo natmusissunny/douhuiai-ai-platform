@@ -5,6 +5,9 @@ FROM alibaba-cloud-linux-3-registry.cn-hangzhou.cr.aliyuncs.com/alinux3/node:20.
 
 WORKDIR /app
 
+# 以 root 身份安装依赖，避免权限问题
+USER root
+
 # Copy package files
 COPY package*.json ./
 

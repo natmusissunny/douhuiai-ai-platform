@@ -84,11 +84,13 @@ const VideoPage = () => {
       message.warning('该功能需要上传图片');
       return;
     }
-    if (quotaBalance < 50) {
+    // 视频：文生音频1豆点，普通5豆点，高级8豆点
+    const cost = activeType === 'text2voice' ? 1 : ['sora2video', 'presenter'].includes(activeType) ? 8 : 5;
+    if (quotaBalance < cost) {
       Modal.error({
         title: '豆点不足',
         icon: <ExclamationCircleOutlined />,
-        content: `视频创作需要较多豆点，当前余额 ${quotaBalance}，请充值后再试。`,
+        content: `当前豆点 ${quotaBalance}，本操作需要 ${cost} 豆点，请充值后再试。`,
       });
       return;
     }

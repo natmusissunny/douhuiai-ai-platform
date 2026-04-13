@@ -97,11 +97,13 @@ const EcommercePage = () => {
       message.warning('请输入产品设计描述');
       return;
     }
-    if (quotaBalance < 20) {
+    // 电商功能配额消耗：基础2豆点，高级3豆点
+    const cost = ['scene_bg', 'selling_point', 'virtual_tryon', 'product_design'].includes(activeType) ? 3 : 2;
+    if (quotaBalance < cost) {
       Modal.error({
         title: '豆点不足',
         icon: <ExclamationCircleOutlined />,
-        content: `当前豆点 ${quotaBalance}，请充值后再试。`,
+        content: `当前豆点 ${quotaBalance}，本操作需要 ${cost} 豆点，请充值后再试。`,
       });
       return;
     }
