@@ -5,6 +5,7 @@ User API Routes
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List
 
 from app.database import get_db
@@ -71,26 +72,24 @@ async def get_quota(
     Returns:
         QuotaInfo: 配额余额和使用情况
     """
-    # 计算总充值
+    # 计算总充值（sum 聚合，避免多条记录时 scalar 报错）
     total_recharged = (
-        db.query(QuotaTransaction)
+        db.query(func.sum(QuotaTransaction.amount))
         .filter(
             QuotaTransaction.user_id == current_user.id,
             QuotaTransaction.type == "recharge",
         )
-        .with_entities(QuotaTransaction.amount)
         .scalar()
         or 0
     )
 
     # 计算总消耗
     total_used = (
-        db.query(QuotaTransaction)
+        db.query(func.sum(QuotaTransaction.amount))
         .filter(
             QuotaTransaction.user_id == current_user.id,
-            QuotaTransaction.type.in_(["consume", "refund"]),
+            QuotaTransaction.type == "consume",
         )
-        .with_entities(QuotaTransaction.amount)
         .scalar()
         or 0
     )

@@ -271,7 +271,11 @@ class ProjectService:
             project.progress = progress
 
         if result_data is not None:
-            project.result = result_data
+            # result_data 格式: {"result_urls": ["url1", ...]}
+            if "result_urls" in result_data:
+                project.result_urls = result_data["result_urls"]
+                if result_data["result_urls"]:
+                    project.result_url = result_data["result_urls"][0]
 
         if error_message is not None:
             project.error_message = error_message
@@ -280,6 +284,24 @@ class ProjectService:
             from datetime import datetime
             project.completed_at = datetime.now()
             project.progress = 100
+
+        # 任务最终失败时自动退款
+        if status == "failed" and project.quota_cost and project.quota_cost > 0:
+            user = db.query(User).filter(User.id == project.user_id).first()
+            if user:
+                user.quota_balance += project.quota_cost
+                refund_tx = QuotaTransaction(
+                    user_id=user.id,
+                    amount=project.quota_cost,
+                    balance_after=user.quota_balance,
+                    type="refund",
+                    description=f"任务失败自动退款（项目#{project.id}）",
+                    related_type="project",
+                    related_id=project.id,
+                )
+                db.add(refund_tx)
+                # 标记已退款，防止重复退款
+                project.quota_cost = Decimal("0")
 
         db.commit()
         db.refresh(project)

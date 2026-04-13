@@ -125,8 +125,19 @@ def process_text2img_task(self, project_id: int, params: Dict[str, Any] = None):
                 api_response = loop.run_until_complete(
                     douhuiai_service.create_text2img_task(prompt, input_params)
                 )
-                uuid = api_response.get("data", {}).get("uuid")
+                # UUID 在顶层或 data 中（兼容两种格式）
+                uuid = api_response.get("uuid") or api_response.get("data", {}).get("uuid")
                 project.uuid = uuid
+
+                # doGenKontext 可能同步返回图片结果
+                result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+                if result_urls:
+                    project_service.update_project_status(
+                        db, project, "completed", progress=100,
+                        result_data={"result_urls": result_urls},
+                    )
+                    db.commit()
+                    return {"status": "completed", "result_urls": result_urls}
                 db.commit()
 
             return _poll_task_until_done(loop, project, db, uuid)
@@ -185,8 +196,19 @@ def process_img2img_task(self, project_id: int, params: Dict[str, Any] = None):
                 api_response = loop.run_until_complete(
                     douhuiai_service.create_img2img_task(image_url, prompt, input_params)
                 )
-                uuid = api_response.get("data", {}).get("uuid")
+                # UUID 在顶层或 data 中（兼容两种格式）
+                uuid = api_response.get("uuid") or api_response.get("data", {}).get("uuid")
                 project.uuid = uuid
+
+                # doGenKontext 可能同步返回图片结果
+                result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+                if result_urls:
+                    project_service.update_project_status(
+                        db, project, "completed", progress=100,
+                        result_data={"result_urls": result_urls},
+                    )
+                    db.commit()
+                    return {"status": "completed", "result_urls": result_urls}
                 db.commit()
 
             return _poll_task_until_done(loop, project, db, uuid)
@@ -308,8 +330,19 @@ def process_3d_render_task(self, project_id: int, params: Dict[str, Any] = None)
                 api_response = loop.run_until_complete(
                     douhuiai_service.create_3d_render_task(model_type, prompt, input_params)
                 )
-                uuid = api_response.get("data", {}).get("uuid")
+                # UUID 在顶层或 data 中（兼容两种格式）
+                uuid = api_response.get("uuid") or api_response.get("data", {}).get("uuid")
                 project.uuid = uuid
+
+                # doGenKontext 可能同步返回图片结果
+                result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+                if result_urls:
+                    project_service.update_project_status(
+                        db, project, "completed", progress=100,
+                        result_data={"result_urls": result_urls},
+                    )
+                    db.commit()
+                    return {"status": "completed", "result_urls": result_urls}
                 db.commit()
 
             return _poll_task_until_done(loop, project, db, uuid)
