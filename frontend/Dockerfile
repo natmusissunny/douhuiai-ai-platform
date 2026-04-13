@@ -1,7 +1,7 @@
 # Multi-stage build for frontend
 
 # Stage 1: Build
-FROM node:22-alpine AS builder
+FROM registry.cn-hangzhou.aliyuncs.com/library/node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -25,7 +25,7 @@ ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 RUN npm run build
 
 # Stage 2: Production
-FROM nginx:alpine
+FROM registry.cn-hangzhou.aliyuncs.com/library/nginx:alpine
 
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
