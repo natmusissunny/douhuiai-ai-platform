@@ -38,6 +38,7 @@ from app.schemas.admin import (
     BatchUserDeleteResponse,
 )
 from app.config import settings
+from app.services.douhuiai import douhuiai_service
 import httpx
 
 router = APIRouter()
@@ -627,39 +628,12 @@ async def get_api_balance(
     current_user: User = Depends(require_permission("stats.view")),
 ):
     """
-    查询豆绘 API 账户余额（实时请求豆绘服务器）
+    查询豆绘 API 账户余额（通过 getapiaccount 接口实时查询）
     """
-    # 发送一个最小的探测请求，通过余额不足的错误信息获取当前余额数值
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.post(
-                f"{settings.DOUHUIAI_API_URL}/api/aiart/doGenKontext",
-                headers={
-                    "Authorization": f"Bearer {settings.DOUHUIAI_APP_SECRET}",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-                },
-                data={
-                    "dhAiType": "kontextimg",
-                    "dhMode": "text",
-                    "dhPrompt": "balance_check",
-                    "dhImgNum": "1",
-                    "dhImgSize": "-1",
-                    "dhImgRatio": "1:1",
-                },
-            )
-        result = response.json()
-        msg = result.get("msg", "")
-
-        # 解析余额不足消息中的当前余额数值
-        # 格式：总账户余额不足，当前余额0，需扣费20
-        import re
-        match = re.search(r"当前余额(\d+\.?\d*)", msg)
-        balance = float(match.group(1)) if match else 0.0
-
-        # 如果成功（说明账户有余额且任务已创建），余额来自 data
-        if result.get("code") == "200":
-            balance = float("inf")  # 成功表示余额充足，无法精确读取
-
+        result = await douhuiai_service.get_account_balance()
+        # 返回格式: {"code": 200, "data": {"balance": 19560}, "msg": "success"}
+        balance = float(result.get("data", {}).get("balance", 0))
     except Exception:
         balance = -1.0  # 请求失败
 
@@ -1008,6 +982,65 @@ async def get_quota_stats(
         "transactions_today": transactions_today,
         "transactions_this_month": transactions_this_month,
     }
+
+
+@router.get("/statistics/user-quota")
+async def get_user_quota_usage(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("stats.view")),
+):
+    """
+    获取每个用户的配额使用详情（充值总额、消耗总额、当前余额）
+    """
+    users = db.query(User).filter(User.deleted_at == None).all()
+    user_ids = [u.id for u in users]
+
+    # 批量查每个用户的充值总额和消耗总额
+    recharged_rows = (
+        db.query(
+            QuotaTransaction.user_id,
+            func.sum(QuotaTransaction.amount),
+        )
+        .filter(QuotaTransaction.user_id.in_(user_ids), QuotaTransaction.type == "recharge")
+        .group_by(QuotaTransaction.user_id)
+        .all()
+    )
+    consumed_rows = (
+        db.query(
+            QuotaTransaction.user_id,
+            func.sum(QuotaTransaction.amount),
+        )
+        .filter(QuotaTransaction.user_id.in_(user_ids), QuotaTransaction.type == "consume")
+        .group_by(QuotaTransaction.user_id)
+        .all()
+    )
+
+    recharged_map = {uid: float(abs(amt)) for uid, amt in recharged_rows}
+    consumed_map = {uid: float(abs(amt)) for uid, amt in consumed_rows}
+
+    # 查角色名
+    from app.models.role import Role
+    role_map = {r.id: r.name for r in db.query(Role.id, Role.name).all()}
+
+    items = []
+    for u in users:
+        total_recharged = recharged_map.get(u.id, 0.0)
+        total_consumed = consumed_map.get(u.id, 0.0)
+        items.append({
+            "user_id": u.id,
+            "username": u.username,
+            "email": u.email,
+            "role": role_map.get(u.role_id, "unknown"),
+            "status": u.status,
+            "total_recharged": total_recharged,
+            "total_consumed": total_consumed,
+            "quota_balance": float(u.quota_balance),
+        })
+
+    # 按余额降序排列
+    items.sort(key=lambda x: x["quota_balance"], reverse=True)
+
+    return {"items": items}
 
 
 # ==================== 任务管理 ====================

@@ -85,11 +85,12 @@ const Text2ImgPage = () => {
       return;
     }
 
-    if (quotaBalance < 20) {
+    // 文生图配额消耗：1-2豆点
+    if (quotaBalance < 1) {
       Modal.error({
         title: '豆点不足',
         icon: <ExclamationCircleOutlined />,
-        content: `当前豆点 ${quotaBalance}，此操作需要消耗 20 豆点，请充值后再试。`,
+        content: `当前豆点 ${quotaBalance}，请充值后再试。`,
       });
       return;
     }

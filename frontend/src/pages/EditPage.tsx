@@ -1,5 +1,5 @@
 /**
- * 编辑应用页面 - 豆绘AI精简版
+ * 编辑应用页面 - 豆绘AI风格
  * 对应后端 POST /api/v1/projects/edit
  */
 import { useState, useRef } from 'react';
@@ -8,23 +8,45 @@ import { useNavigate } from 'react-router-dom';
 import { createImageEdit } from '../api/project';
 import { useAuthStore } from '../stores/authStore';
 
-// 左侧菜单（精简版只保留4个入口）
-const sideMenuItems = [
-  { label: '图片编辑器', editType: 'upscale' },
-  { label: '图片精修', editType: 'hd_repaint' },
-  { label: 'PS场景融合', editType: 'outpaint' },
-  { label: '长图拼图', editType: 'long_image' },
+// 换风格可选 Lora 模板
+const loraOptions = [
+  { label: '动漫风', value: 'anime' },
+  { label: '写实照片', value: 'realistic' },
+  { label: '油画风', value: 'oil_painting' },
+  { label: '水彩画', value: 'watercolor' },
+  { label: '赛博朋克', value: 'cyberpunk' },
+  { label: '素描风', value: 'sketch' },
 ];
 
-// 编辑功能列表（主区域 grid，只保留3个）
+// 左侧菜单（editType 对齐后端 EDIT_TYPE_MAP + EDIT_TYPE_MAP_EXTENDED）
+const sideMenus = [
+  {
+    label: '图片编辑器',
+    items: [
+      { label: '图片精修', editType: 'img_refine' },
+      { label: 'PS场景融合', editType: 'ps_scene_merge' },
+      { label: '图片视角调整', editType: 'universal_edit' },
+      { label: '批量抠图', editType: 'remove_bg' },
+    ],
+  },
+];
+
+// 编辑功能列表（主区域 grid）
 const editFunctions = [
-  { label: '高清放大', editType: 'upscale' },
+  { label: '高清放大', editType: 'upscale', active: true },
   { label: '高清重绘', editType: 'hd_repaint' },
-  { label: 'AI扩图', editType: 'outpaint' },
+  { label: 'AI抠图', editType: 'remove_bg' },
+  { label: '换背景', editType: 'change_bg' },
+  { label: '比例调整', editType: 'ratio' },
+  { label: '万物消除', editType: 'inpaint' },
+  { label: '局部修复', editType: 'local_repair' },
+  { label: '万物替换', editType: 'replace' },
+  { label: '一键美化', editType: 'beautify' },
+  { label: '精准提取线稿', editType: 'extract_line' },
+  { label: '万能改图', editType: 'universal_edit' },
 ];
 
-// 高清放大模式
-const upscaleModes = ['通用模式', '超清增强', '真实照片', '动漫图片', '细节增强'];
+const upscaleModes = ['通用模式', '超清增强'];
 
 const EditPage = () => {
   const navigate = useNavigate();
@@ -35,8 +57,33 @@ const EditPage = () => {
   const [activeMode, setActiveMode] = useState('通用模式');
   const [imageUrl, setImageUrl] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
+  // 换背景：背景描述
+  const [bgPrompt, setBgPrompt] = useState('');
+  // 换风格：Lora 模板
+  const [loraType, setLoraType] = useState('anime');
+  // 万物替换：蒙版图片（标记要替换的区域）
+  const [maskUrl, setMaskUrl] = useState('');
+  const [maskPreviewUrl, setMaskPreviewUrl] = useState('');
+  // 万物替换：替换描述
+  const [replacePrompt, setReplacePrompt] = useState('');
+  // PS场景融合：第二张图
+  const [imageUrl2, setImageUrl2] = useState('');
+  const [previewUrl2, setPreviewUrl2] = useState('');
+  // PS场景融合：融合描述
+  const [blendPrompt, setBlendPrompt] = useState('');
+  // 批量抠图：多个文件
+  const [batchFiles, setBatchFiles] = useState<{ name: string; dataUrl: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const maskInputRef = useRef<HTMLInputElement>(null);
+  const file2InputRef = useRef<HTMLInputElement>(null);
+  const batchInputRef = useRef<HTMLInputElement>(null);
   const quotaBalance = Math.floor(Number(user?.quota_balance || 0));
+
+  // 配额消耗计算（与后端 calculate_quota_cost 对齐）
+  const getQuotaCost = (editType: string) => {
+    if (editType === 'upscale') return 3;
+    return 2;
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,11 +94,99 @@ const EditPage = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleMaskFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setMaskPreviewUrl(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = (ev) => setMaskUrl(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  // 第二张图上传（场景融合用）
+  const handleFile2Change = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPreviewUrl2(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = (ev) => setImageUrl2(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  // 批量文件上传（批量抠图用）
+  const handleBatchFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    const readers = files.map((file) => {
+      return new Promise<{ name: string; dataUrl: string }>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve({ name: file.name, dataUrl: ev.target?.result as string });
+        reader.readAsDataURL(file);
+      });
+    });
+    Promise.all(readers).then((results) => setBatchFiles(results));
+  };
+
   const handleSubmit = async () => {
+    // 批量抠图：多文件提交
+    if (activeEdit === 'remove_bg' && batchFiles.length > 0) {
+      const cost = getQuotaCost('remove_bg') * batchFiles.length;
+      if (quotaBalance < cost) {
+        message.error(`豆点不足，批量抠图 ${batchFiles.length} 张需要 ${cost} 豆点，当前 ${quotaBalance} 豆点`);
+        return;
+      }
+      setLoading(true);
+      try {
+        let successCount = 0;
+        for (const file of batchFiles) {
+          try {
+            await createImageEdit({ image_url: file.dataUrl, edit_type: 'remove_bg', params: {} });
+            successCount++;
+          } catch { /* 单张失败不阻塞 */ }
+        }
+        message.success(`批量抠图完成：${successCount}/${batchFiles.length} 张已提交`);
+        navigate('/projects');
+      } catch (error: any) {
+        message.error('批量处理失败');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (!imageUrl) { message.warning('请先上传图片'); return; }
 
+    // 各功能的额外参数校验
+    if (activeEdit === 'change_bg' && !bgPrompt.trim()) {
+      message.warning('请输入背景描述'); return;
+    }
+    if (activeEdit === 'replace' && !maskUrl) {
+      message.warning('请上传蒙版图片（标记要替换的区域）'); return;
+    }
+    if (activeEdit === 'ps_scene_merge' && !imageUrl2) {
+      message.warning('请上传第二张图片'); return;
+    }
+
+    // 配额检查（与后端实际扣费对齐）
+    const cost = getQuotaCost(activeEdit);
+    if (quotaBalance < cost) {
+      message.error(`豆点不足，当前操作需要 ${cost} 豆点，当前余额 ${quotaBalance} 豆点`);
+      return;
+    }
+
     // 构建额外参数
-    const extraParams: Record<string, any> = { mode: activeMode };
+    const extraParams: Record<string, any> = {};
+    if (activeEdit === 'upscale') extraParams.mode = activeMode;
+    if (activeEdit === 'change_bg') extraParams.dhPrompt = bgPrompt;
+    if (activeEdit === 'style_transfer') extraParams.dhLoraType = loraType;
+    if (activeEdit === 'replace') {
+      extraParams.dhMaskImg = maskUrl;
+      extraParams.dhPrompt = replacePrompt;
+    }
+    if (activeEdit === 'ps_scene_merge') {
+      extraParams.image_url2 = imageUrl2;
+      extraParams.dhPrompt = blendPrompt;
+    }
 
     setLoading(true);
     try {
@@ -70,28 +205,35 @@ const EditPage = () => {
   };
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 88px)', background: '#f5f5f5' }}>
+    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', background: '#f5f5f5' }}>
       {/* 左侧分类菜单 */}
       <aside style={{
         width: 160, background: '#fff', borderRight: '1px solid #f0f0f0',
         flexShrink: 0, overflowY: 'auto', paddingTop: 8,
       }}>
-        {sideMenuItems.map((item) => (
-          <button
-            key={item.label}
-            onClick={() => { setActiveMenu(item.label); setActiveEdit(item.editType); }}
-            style={{
-              display: 'block', width: '100%', textAlign: 'left',
-              padding: '10px 16px', border: 'none',
-              background: activeMenu === item.label ? '#f0fdf4' : 'none',
-              color: activeMenu === item.label ? '#16a34a' : '#374151',
-              fontSize: 13, cursor: 'pointer',
-              fontWeight: activeMenu === item.label ? 500 : 400,
-              borderRight: activeMenu === item.label ? '2px solid #16a34a' : '2px solid transparent',
-            }}
-          >
-            {item.label}
-          </button>
+        {sideMenus.map((group) => (
+          <div key={group.label}>
+            <div style={{ padding: '8px 16px 4px', fontSize: 11, color: '#9ca3af', fontWeight: 500 }}>
+              {group.label}
+            </div>
+            {group.items.map((item) => (
+              <button
+                key={item.label}
+                onClick={() => { setActiveMenu(item.label); setActiveEdit(item.editType); }}
+                style={{
+                  display: 'block', width: '100%', textAlign: 'left',
+                  padding: '8px 16px', border: 'none',
+                  background: activeMenu === item.label ? '#f0fdf4' : 'none',
+                  color: activeMenu === item.label ? '#16a34a' : '#374151',
+                  fontSize: 13, cursor: 'pointer',
+                  fontWeight: activeMenu === item.label ? 500 : 400,
+                  borderRight: activeMenu === item.label ? '2px solid #16a34a' : '2px solid transparent',
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         ))}
       </aside>
 
@@ -183,6 +325,148 @@ const EditPage = () => {
             </div>
           )}
 
+          {/* 换背景：背景描述输入（必填） */}
+          {activeEdit === 'change_bg' && (
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 8 }}>
+                * 背景描述 <span style={{ color: '#ef4444', fontSize: 12 }}>（必填）</span>
+              </div>
+              <textarea
+                value={bgPrompt}
+                onChange={(e) => setBgPrompt(e.target.value)}
+                placeholder="描述你想要的新背景，例如：海边沙滩、城市夜景、简约白色背景..."
+                style={{
+                  width: '100%', minHeight: 80, padding: '10px 14px',
+                  border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 13,
+                  color: '#374151', resize: 'vertical', outline: 'none',
+                  fontFamily: 'inherit', boxSizing: 'border-box',
+                }}
+                onFocus={(e) => { e.target.style.borderColor = '#16a34a'; }}
+                onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; }}
+              />
+            </div>
+          )}
+
+          {/* 换风格：Lora 模板选择（必选） */}
+          {activeEdit === 'style_transfer' && (
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 12 }}>
+                * 选择风格模板 <span style={{ color: '#ef4444', fontSize: 12 }}>（必选）</span>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {loraOptions.map((lora) => (
+                  <button
+                    key={lora.value}
+                    onClick={() => setLoraType(lora.value)}
+                    style={{
+                      padding: '8px 20px', border: `1.5px solid ${loraType === lora.value ? '#16a34a' : '#e5e7eb'}`,
+                      borderRadius: 8, background: loraType === lora.value ? '#f0fdf4' : '#fff',
+                      color: loraType === lora.value ? '#16a34a' : '#374151',
+                      fontSize: 13, cursor: 'pointer', fontWeight: loraType === lora.value ? 500 : 400,
+                    }}
+                  >
+                    {lora.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* PS场景融合：第二张图上传 + 融合描述 */}
+          {activeEdit === 'ps_scene_merge' && (
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 8 }}>
+                * 上传第二张图片 <span style={{ color: '#ef4444', fontSize: 12 }}>（必选）</span>
+              </div>
+              <input ref={file2InputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile2Change} />
+              {previewUrl2 ? (
+                <div onClick={() => file2InputRef.current?.click()} style={{ border: '1.5px dashed #d1d5db', borderRadius: 8, padding: 8, cursor: 'pointer', maxWidth: 200 }}>
+                  <img src={previewUrl2} alt="img2" style={{ width: '100%', borderRadius: 6, display: 'block' }} />
+                  <div style={{ textAlign: 'center', fontSize: 11, color: '#9ca3af', marginTop: 4 }}>点击替换</div>
+                </div>
+              ) : (
+                <div onClick={() => file2InputRef.current?.click()} style={{ border: '1.5px dashed #d1d5db', borderRadius: 8, padding: '20px 16px', textAlign: 'center', cursor: 'pointer', maxWidth: 200 }}>
+                  <div style={{ fontSize: 22, color: '#9ca3af', marginBottom: 4 }}>↑</div>
+                  <div style={{ fontSize: 13, color: '#374151' }}>上传第二张图片</div>
+                </div>
+              )}
+              <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 8, marginTop: 16 }}>
+                融合描述 <span style={{ fontSize: 12, color: '#9ca3af' }}>（可选，描述融合效果）</span>
+              </div>
+              <textarea
+                value={blendPrompt}
+                onChange={(e) => setBlendPrompt(e.target.value)}
+                placeholder="描述两张图片的融合效果，例如：将两个场景融合在一起，营造出梦幻氛围..."
+                style={{
+                  width: '100%', minHeight: 60, padding: '10px 14px',
+                  border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 13,
+                  color: '#374151', resize: 'vertical', outline: 'none',
+                  fontFamily: 'inherit', boxSizing: 'border-box',
+                }}
+                onFocus={(e) => { e.target.style.borderColor = '#16a34a'; }}
+                onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; }}
+              />
+            </div>
+          )}
+
+          {/* 批量抠图：多文件选择 */}
+          {activeEdit === 'remove_bg' && (
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 8 }}>
+                批量上传 <span style={{ fontSize: 12, color: '#9ca3af' }}>（可选，选多张图片一次性抠图）</span>
+              </div>
+              <input ref={batchInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleBatchFileChange} />
+              <button
+                onClick={() => batchInputRef.current?.click()}
+                style={{
+                  padding: '8px 20px', border: '1.5px solid #16a34a', borderRadius: 8,
+                  color: '#16a34a', background: '#fff', cursor: 'pointer', fontSize: 13,
+                }}
+              >
+                选择多张图片批量抠图
+              </button>
+              {batchFiles.length > 0 && (
+                <div style={{ marginTop: 8, fontSize: 12, color: '#6b7280' }}>
+                  已选 {batchFiles.length} 张图片（预计消耗 {batchFiles.length * getQuotaCost('remove_bg')} 豆点）
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 万物替换：蒙版上传 + 替换描述 */}
+          {activeEdit === 'replace' && (
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 8 }}>
+                * 蒙版图片 <span style={{ color: '#ef4444', fontSize: 12 }}>（必选，标记要替换的区域）</span>
+              </div>
+              <input ref={maskInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleMaskFileChange} />
+              {maskPreviewUrl ? (
+                <div onClick={() => maskInputRef.current?.click()} style={{ border: '1.5px dashed #d1d5db', borderRadius: 8, padding: 8, cursor: 'pointer', maxWidth: 200 }}>
+                  <img src={maskPreviewUrl} alt="mask" style={{ width: '100%', borderRadius: 6, display: 'block' }} />
+                  <div style={{ textAlign: 'center', fontSize: 11, color: '#9ca3af', marginTop: 4 }}>点击替换</div>
+                </div>
+              ) : (
+                <div onClick={() => maskInputRef.current?.click()} style={{ border: '1.5px dashed #d1d5db', borderRadius: 8, padding: '20px 16px', textAlign: 'center', cursor: 'pointer', maxWidth: 200 }}>
+                  <div style={{ fontSize: 22, color: '#9ca3af', marginBottom: 4 }}>↑</div>
+                  <div style={{ fontSize: 13, color: '#374151' }}>上传蒙版图片</div>
+                </div>
+              )}
+              <div style={{ fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 8, marginTop: 16 }}>
+                替换描述 <span style={{ fontSize: 12, color: '#9ca3af' }}>（可选）</span>
+              </div>
+              <input
+                value={replacePrompt}
+                onChange={(e) => setReplacePrompt(e.target.value)}
+                placeholder="描述替换成什么，例如：一只猫、红色跑车..."
+                style={{
+                  width: '100%', padding: '10px 14px', border: '1px solid #e5e7eb',
+                  borderRadius: 8, fontSize: 13, color: '#374151', outline: 'none', boxSizing: 'border-box',
+                }}
+                onFocus={(e) => { e.target.style.borderColor = '#16a34a'; }}
+                onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; }}
+              />
+            </div>
+          )}
         </div>
 
         {/* 右侧预览区 */}
@@ -206,7 +490,7 @@ const EditPage = () => {
 
       {/* 底部操作栏 */}
       <div style={{
-        position: 'fixed', bottom: 0, left: 232, right: 0,
+        position: 'fixed', bottom: 0, left: 160, right: 0,
         background: '#fff', borderTop: '1px solid #f0f0f0',
         padding: '12px 24px', display: 'flex',
         alignItems: 'center', justifyContent: 'space-between', zIndex: 10,

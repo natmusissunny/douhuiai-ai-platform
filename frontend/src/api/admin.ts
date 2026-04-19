@@ -152,6 +152,7 @@ export interface QuotaStats {
 
 /**
  * 获取用户列表
+ * 后端接受 skip/limit，前端传 page/per_page 需转换
  */
 export const getUserList = (params: {
   page?: number;
@@ -159,7 +160,10 @@ export const getUserList = (params: {
   status?: string;
   search?: string;
 }) => {
-  return request.get<UserListResponse>('/api/v1/admin/users', { params });
+  const { page = 1, per_page = 20, ...rest } = params;
+  return request.get<UserListResponse>('/api/v1/admin/users', {
+    params: { skip: (page - 1) * per_page, limit: per_page, ...rest },
+  });
 };
 
 /**
@@ -220,6 +224,7 @@ export const adjustUserQuota = (userId: number, data: QuotaAdjustData) => {
 
 /**
  * 获取配额流水记录
+ * 后端接受 skip/limit，前端传 page/per_page 需转换
  */
 export const getQuotaTransactions = (params?: {
   page?: number;
@@ -229,7 +234,10 @@ export const getQuotaTransactions = (params?: {
   start_date?: string;
   end_date?: string;
 }) => {
-  return request.get<TransactionListResponse>('/api/v1/admin/quota-transactions', { params });
+  const { page = 1, per_page = 20, ...rest } = params || {};
+  return request.get<TransactionListResponse>('/api/v1/admin/quota-transactions', {
+    params: { skip: (page - 1) * per_page, limit: per_page, ...rest },
+  });
 };
 
 /**
@@ -237,6 +245,27 @@ export const getQuotaTransactions = (params?: {
  */
 export const getApiBalance = () => {
   return request.get<ApiBalance>('/api/v1/admin/api-balance');
+};
+
+/**
+ * 每用户配额使用情况
+ */
+export interface UserQuotaUsageItem {
+  user_id: number;
+  username: string;
+  email: string;
+  role: string;
+  status: string;
+  total_recharged: number;
+  total_consumed: number;
+  quota_balance: number;
+}
+
+/**
+ * 获取每用户配额使用详情
+ */
+export const getUserQuotaUsage = () => {
+  return request.get<{ items: UserQuotaUsageItem[] }>('/api/v1/admin/statistics/user-quota');
 };
 
 // ==================== 批量操作 ====================

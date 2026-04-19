@@ -77,15 +77,22 @@ async def create_text2img(
 
     # 异步调用豆绘AI API
     try:
-        # 调用真实的豆绘AI API
         api_response = await douhuiai_service.create_text2img_task(request.prompt, params)
-        project.uuid = api_response.get("data", {}).get("uuid")
-        db.commit()
+        # UUID 在顶层或 data 中（兼容两种格式）
+        project.uuid = api_response.get("uuid") or api_response.get("data", {}).get("uuid")
 
-        # 添加到后台任务队列
-        background_tasks.add_task(process_text2img_task, project.id, params)
+        # doGenKontext 可能同步返回图片结果（imgs 字段）
+        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        if result_urls:
+            project_service.update_project_status(
+                db, project, "completed", progress=100,
+                result_data={"result_urls": result_urls},
+            )
+        else:
+            db.commit()
+            # 未同步返回结果，添加到后台任务队列轮询
+            background_tasks.add_task(process_text2img_task, project.id, params)
     except Exception as e:
-        # API调用失败,更新状态并退款
         project_service.update_project_status(
             db, project, "failed", error_message=str(e)
         )
@@ -139,11 +146,19 @@ async def create_img2img(
         api_response = await douhuiai_service.create_img2img_task(
             image_url, request.prompt, params
         )
-        project.uuid = api_response.get("data", {}).get("uuid")
-        db.commit()
+        # UUID 在顶层或 data 中（兼容两种格式）
+        project.uuid = api_response.get("uuid") or api_response.get("data", {}).get("uuid")
 
-        # 添加到后台任务队列
-        background_tasks.add_task(process_img2img_task, project.id, params)
+        # doGenKontext 可能同步返回图片结果
+        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        if result_urls:
+            project_service.update_project_status(
+                db, project, "completed", progress=100,
+                result_data={"result_urls": result_urls},
+            )
+        else:
+            db.commit()
+            background_tasks.add_task(process_img2img_task, project.id, params)
     except Exception as e:
         project_service.update_project_status(
             db, project, "failed", error_message=str(e)
@@ -202,16 +217,37 @@ async def create_edit(
             mask_ext = "jpg" if "jpeg" in mask_header else "png"
             extra_params["dhMaskImg"] = await douhuiai_service.upload_image(mask_bytes, f"mask.{mask_ext}")
 
-        # 调用真实的豆绘AI API
-        # doEdit 响应格式：{status: 200, uuid: "...", imgs: {...}}（uuid 在顶层）
-        api_response = await douhuiai_service.create_edit_task(
-            image_url, request.edit_type, extra_params or None
-        )
+        # PS场景融合走多图融合接口 doBlenderCreate
+        if request.edit_type == "ps_scene_merge":
+            # 第二张图从 params.image_url2 获取
+            image_url2 = extra_params.pop("image_url2", "")
+            if image_url2.startswith("data:"):
+                h2, b2 = image_url2.split(",", 1)
+                fb2 = b64mod.b64decode(b2)
+                ext2 = "jpg" if "jpeg" in h2 else "png"
+                image_url2 = await douhuiai_service.upload_image(fb2, f"blend2.{ext2}")
+            prompt = extra_params.pop("dhPrompt", "两张图片融合")
+            api_response = await douhuiai_service.create_blender_task(
+                [image_url, image_url2], prompt, extra_params
+            )
+        else:
+            # 常规编辑走 doEdit
+            api_response = await douhuiai_service.create_edit_task(
+                image_url, request.edit_type, extra_params or None
+            )
         project.uuid = api_response.get("uuid")
-        db.commit()
 
-        # 添加到后台任务队列
-        background_tasks.add_task(process_edit_task, project.id, params)
+        # doEdit / doBlenderCreate 可能同步返回图片结果
+        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        if result_urls:
+            project_service.update_project_status(
+                db, project, "completed", progress=100,
+                result_data={"result_urls": result_urls},
+            )
+        else:
+            db.commit()
+            # 未同步返回结果，添加到后台任务队列轮询
+            background_tasks.add_task(process_edit_task, project.id, params)
     except Exception as e:
         project_service.update_project_status(
             db, project, "failed", error_message=str(e)
@@ -252,15 +288,22 @@ async def create_3d_render(
     )
 
     try:
-        # 调用真实的豆绘AI API
         api_response = await douhuiai_service.create_3d_render_task(
             request.model_type, request.prompt, params
         )
-        project.uuid = api_response.get("data", {}).get("uuid")
-        db.commit()
+        # UUID 在顶层或 data 中（兼容两种格式）
+        project.uuid = api_response.get("uuid") or api_response.get("data", {}).get("uuid")
 
-        # 添加到后台任务队列
-        background_tasks.add_task(process_3d_render_task, project.id, params)
+        # doGenKontext 可能同步返回图片结果
+        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        if result_urls:
+            project_service.update_project_status(
+                db, project, "completed", progress=100,
+                result_data={"result_urls": result_urls},
+            )
+        else:
+            db.commit()
+            background_tasks.add_task(process_3d_render_task, project.id, params)
     except Exception as e:
         project_service.update_project_status(
             db, project, "failed", error_message=str(e)

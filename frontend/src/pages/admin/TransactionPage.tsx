@@ -18,15 +18,12 @@ import { useAdminStore } from '../../stores/adminStore';
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
+// 对齐后端实际写入的 type 值
 const TYPE_OPTIONS = [
-  { value: 'charge', label: '充值' },
+  { value: 'recharge', label: '充值' },
   { value: 'consume', label: '消费' },
   { value: 'refund', label: '退款' },
   { value: 'gift', label: '赠送' },
-  { value: 'admin_set', label: '管理设置' },
-  { value: 'admin_add', label: '管理增加' },
-  { value: 'admin_subtract', label: '管理扣除' },
-  { value: 'recharge', label: '充值(旧)' },
 ];
 
 export const TransactionPage: React.FC = () => {
@@ -77,15 +74,12 @@ export const TransactionPage: React.FC = () => {
     setPage(1);
   };
 
-  // 类型颜色和文本映射
+  // 类型颜色和文本映射（对齐后端实际 type 值）
   const typeConfig: Record<string, { color: string; label: string }> = {
-    charge: { color: 'green', label: '充值' },
+    recharge: { color: 'green', label: '充值' },
     consume: { color: 'red', label: '消费' },
     refund: { color: 'blue', label: '退款' },
     gift: { color: 'purple', label: '赠送' },
-    admin_set: { color: 'orange', label: '管理设置' },
-    admin_add: { color: 'cyan', label: '管理增加' },
-    admin_subtract: { color: 'volcano', label: '管理扣除' },
   };
 
   const columns = [

@@ -38,10 +38,60 @@ app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 @app.on_event("startup")
 async def startup_event():
-    """应用启动事件"""
+    """应用启动事件：自动建表 + 初始化种子数据"""
     logger.info(f"🚀 {settings.APP_NAME} v{settings.APP_VERSION} 启动")
     logger.info(f"🌍 Environment: {settings.ENVIRONMENT}")
     logger.info(f"🐛 Debug Mode: {settings.DEBUG}")
+
+    # 自动建表
+    from app.database import init_db, SessionLocal
+    init_db()
+    logger.info("数据库表已同步")
+
+    # 初始化种子数据（角色 + 默认用户），仅在表为空时执行
+    from app.models.role import Role
+    from app.models.user import User
+    from app.utils.security import get_password_hash
+
+    db = SessionLocal()
+    try:
+        if db.query(Role).count() == 0:
+            logger.info("初始化默认角色...")
+            roles = [
+                Role(name="super_admin", display_name="超级管理员", description="拥有所有权限", permissions=["*"]),
+                Role(name="admin", display_name="管理员", description="用户和内容管理", permissions=["user.*", "project.*", "stats.view", "role.view"]),
+                Role(name="user", display_name="普通用户", description="普通用户", permissions=["project.create", "project.view", "user.view"]),
+            ]
+            db.add_all(roles)
+            db.commit()
+            logger.info(f"已创建 {len(roles)} 个角色")
+
+        if db.query(User).count() == 0:
+            logger.info("初始化默认用户...")
+            admin_role = db.query(Role).filter(Role.name == "super_admin").first()
+            user_role = db.query(Role).filter(Role.name == "user").first()
+            users = [
+                User(
+                    username="admin", email="admin@douhuiai.com",
+                    password_hash=get_password_hash("admin123"),
+                    role_id=admin_role.id, quota_balance=10000.00,
+                    status="active", is_verified=True,
+                ),
+                User(
+                    username="testuser", email="test@douhuiai.com",
+                    password_hash=get_password_hash("test123"),
+                    role_id=user_role.id, quota_balance=100.00,
+                    status="active", is_verified=True,
+                ),
+            ]
+            db.add_all(users)
+            db.commit()
+            logger.info("已创建 admin(admin123) 和 testuser(test123)")
+    except Exception as e:
+        logger.error(f"种子数据初始化失败: {e}")
+        db.rollback()
+    finally:
+        db.close()
 
 
 @app.on_event("shutdown")

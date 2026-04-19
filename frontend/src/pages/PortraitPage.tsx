@@ -84,11 +84,13 @@ const PortraitPage = () => {
       message.warning('该功能需要上传人脸参考图');
       return;
     }
-    if (quotaBalance < 20) {
+    // 人像写真：基础2豆点，AI写真/换脸3豆点
+    const cost = ['ai_portrait', 'face_swap'].includes(activeType) ? 3 : 2;
+    if (quotaBalance < cost) {
       Modal.error({
         title: '豆点不足',
         icon: <ExclamationCircleOutlined />,
-        content: `当前豆点 ${quotaBalance}，请充值后再试。`,
+        content: `当前豆点 ${quotaBalance}，本操作需要 ${cost} 豆点，请充值后再试。`,
       });
       return;
     }

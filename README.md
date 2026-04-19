@@ -16,9 +16,10 @@
 
 ## 项目概述
 
-豆绘AI平台是一个全栈 AI 创意生成平台，集成豆绘AI API，提供文生图、图生图、图片编辑、3D 渲染等功能，并附带完整的管理后台。
+豆绘AI平台是一个全栈 AI 图片编辑平台，集成豆绘AI API，提供图片编辑核心功能，并附带完整的管理后台。
 
-- **AI 创作**：文生图、图生图、3D 渲染、图片编辑（18 种操作）
+- **图片编辑**：高清放大、高清重绘、AI扩图
+- **多场景入口**：图片编辑器、图片精修、PS场景融合、长图拼图
 - **项目管理**：历史记录、任务状态轮询、失败重试
 - **配额系统**：余额管理、消费记录、三级预警提醒
 - **管理后台**：用户管理、角色权限（RBAC）、数据统计、余额监控
@@ -32,7 +33,7 @@
 | 前端 | React 18 + TypeScript + Vite + Ant Design 6 + Tailwind CSS |
 | 状态管理 | Zustand |
 | 后端 | FastAPI (Python 3.10+) + SQLAlchemy + Alembic |
-| 数据库 | PostgreSQL 14 + Redis 7 |
+| 数据库 | PostgreSQL 14 + Redis 6.2（阿里云优化版） |
 | 任务队列 | Celery + Redis |
 | 认证 | JWT（access token + refresh token） |
 | 部署 | Docker + Docker Compose |
@@ -73,7 +74,7 @@ douhuiai-ai-platform/
 │       ├── components/          # 通用组件（ProtectedRoute / QuotaAlert）
 │       ├── layouts/             # 布局（Main / Auth / Admin）
 │       ├── pages/
-│       │   ├── 用户端（13 个页面）
+│       │   ├── 用户端（首页/编辑页/项目列表/详情/个人中心）
 │       │   └── admin/           # 管理后台（8 个页面）
 │       ├── stores/              # Zustand 状态管理
 │       └── router/              # 路由配置
@@ -151,12 +152,8 @@ docker compose exec backend alembic upgrade head
 
 | 页面 | 路由 | 功能 |
 |------|------|------|
-| 首页 | `/` | 平台介绍、快速入口 |
-| 工作台 | `/dashboard` | 配额余额、最近项目 |
-| 文生图 | `/create/text2img` | 输入提示词生成图片 |
-| 图生图 | `/create/img2img` | 上传参考图 + 提示词生成 |
-| 图片编辑 | `/create/edit` | 18 种编辑功能 |
-| 3D 渲染 | `/create/3d` | 3D 模型渲染 |
+| 首页 | `/` | 平台介绍、4 个功能入口（图片编辑器/图片精修/PS场景融合/长图拼图） |
+| 图片编辑 | `/create/edit` | 高清放大（5 种模式）、高清重绘、AI扩图 |
 | 项目列表 | `/projects` | 历史任务、状态、重试 |
 | 项目详情 | `/projects/:id` | 任务状态轮询、结果图片 |
 | 个人中心 | `/profile` | 个人信息、配额明细 |
@@ -178,8 +175,7 @@ docker compose exec backend alembic upgrade head
 
 | 功能 | 接口 |
 |------|------|
-| 文生图 / 图生图 | `POST /api/aiart/doGenKontext` |
-| 图片编辑 | `POST /api/aiart/doEdit` |
+| 图片编辑（高清放大/重绘/扩图） | `POST /api/aiart/doEdit` |
 | 任务状态轮询 | `GET /api/aiart/queryStatus` |
 | 图片上传 | `POST /api/index/apiupload` |
 

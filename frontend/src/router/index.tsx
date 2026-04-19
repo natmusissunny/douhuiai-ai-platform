@@ -1,5 +1,5 @@
 /**
- * 路由配置（精简版 — 只保留编辑相关功能）
+ * 路由配置
  */
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
@@ -8,12 +8,11 @@ import { AdminLayout } from '../layouts/AdminLayout';
 import { AdminRoute, ProtectedRoute } from '../components/ProtectedRoute';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
-
 import ProjectListPage from '../pages/ProjectListPage';
 import UserProfilePage from '../pages/UserProfilePage';
 import EditPage from '../pages/EditPage';
 import ProjectDetailPage from '../pages/ProjectDetailPage';
-
+import EcommercePage from '../pages/EcommercePage';
 import { DashboardPage as AdminDashboardPage } from '../pages/admin/DashboardPage';
 import { UserManagementPage } from '../pages/admin/UserManagementPage';
 import { RoleManagementPage } from '../pages/admin/RoleManagementPage';
@@ -31,8 +30,10 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'projects', element: <ProtectedRoute><ProjectListPage /></ProtectedRoute> },
       { path: 'projects/:id', element: <ProtectedRoute><ProjectDetailPage /></ProtectedRoute> },
-      // 编辑应用（精简版唯一功能入口）
+      // 编辑应用
       { path: 'create/edit', element: <ProtectedRoute><EditPage /></ProtectedRoute> },
+      // 产品电商
+      { path: 'create/ecommerce', element: <ProtectedRoute><EcommercePage /></ProtectedRoute> },
       { path: 'profile', element: <ProtectedRoute><UserProfilePage /></ProtectedRoute> },
     ],
   },
@@ -41,7 +42,6 @@ const router = createBrowserRouter([
     element: <AuthLayout />,
     children: [
       { path: 'login', element: <LoginPage /> },
-
     ],
   },
   {

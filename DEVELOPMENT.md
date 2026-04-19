@@ -81,9 +81,11 @@ douhuiai-ai-platform/
 ├── frontend/               # 前端代码
 │   ├── src/
 │   │   ├── api/           # API客户端
-│   │   ├── components/    # React组件
-│   │   ├── pages/         # 页面组件
-│   │   ├── stores/        # Zustand状态
+│   │   ├── components/    # 通用组件（ProtectedRoute / QuotaAlert）
+│   │   ├── layouts/       # 布局（Main / Auth / Admin）
+│   │   ├── pages/         # 页面（首页/编辑页/项目列表/详情/个人中心 + admin/）
+│   │   ├── stores/        # Zustand状态（authStore / adminStore / commonStore）
+│   │   ├── router/        # 路由配置
 │   │   ├── types/         # TypeScript类型
 │   │   ├── utils/         # 工具函数
 │   │   ├── App.tsx

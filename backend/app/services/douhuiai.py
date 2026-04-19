@@ -66,7 +66,7 @@ class DouhuiAIService:
             dhImgRatio = 比例，如 "1:1"
 
         Returns:
-            Dict: {"code": "200", "msg": "...", "data": {"uuid": "..."}}
+            Dict: {"status": 200, "uuid": "...", "imgs": {"grid": "...", "imgs": [...]}}
         """
         num_images = min(int(params.get("num_images", 1)), 2)
         form_data = {
@@ -87,8 +87,9 @@ class DouhuiAIService:
             response.raise_for_status()
             result = response.json()
 
-            # 检查业务错误
-            if str(result.get("code", "")) != "200":
+            # 检查业务错误（兼容 code 和 status 两种格式）
+            code = result.get("status") or result.get("code")
+            if str(code) not in ("200",):
                 raise ValueError(f"API错误: {result.get('msg', '未知错误')}")
 
             return result
@@ -108,7 +109,7 @@ class DouhuiAIService:
             dhImgNum = 生成数量
 
         Returns:
-            Dict: {"code": "200", "data": {"uuid": "..."}}
+            Dict: {"status": 200, "uuid": "...", "imgs": {"grid": "...", "imgs": [...]}}
         """
         num_images = min(int(params.get("num_images", 1)), 2)
         form_data = {
@@ -130,7 +131,9 @@ class DouhuiAIService:
             response.raise_for_status()
             result = response.json()
 
-            if str(result.get("code", "")) != "200":
+            # 检查业务错误（兼容 code 和 status 两种格式）
+            code = result.get("status") or result.get("code")
+            if str(code) not in ("200",):
                 raise ValueError(f"API错误: {result.get('msg', '未知错误')}")
 
             return result
@@ -220,7 +223,7 @@ class DouhuiAIService:
         使用 3D 相关的 dhAiType
 
         Returns:
-            Dict: {"code": "200", "data": {"uuid": "..."}}
+            Dict: {"status": 200, "uuid": "...", "imgs": {...}}
         """
         form_data = {
             "dhAiType": model_type or "3d",
@@ -239,7 +242,9 @@ class DouhuiAIService:
             response.raise_for_status()
             result = response.json()
 
-            if str(result.get("code", "")) != "200":
+            # 检查业务错误（兼容 code 和 status 两种格式）
+            code = result.get("status") or result.get("code")
+            if str(code) not in ("200",):
                 raise ValueError(f"API错误: {result.get('msg', '未知错误')}")
 
             return result
@@ -302,14 +307,26 @@ class DouhuiAIService:
 
     def parse_result_urls(self, status_response: Dict[str, Any]) -> list:
         """
-        从 queryStatus 响应中提取完整图片URL列表（适用于 text2img / img2img / 3d_render）
+        从 queryStatus / doGen* 响应中提取完整图片URL列表
+
+        兼容两种格式：
+            1. queryStatus: {"status": 200, "imglist": ["file1.jpg", ...]}
+            2. doGen*:      {"status": 200, "imgs": {"grid": "...", "imgs": ["file1.jpg", ...]}}
 
         Args:
-            status_response: queryStatus 接口的响应
+            status_response: queryStatus 或 doGen* 接口的响应
 
         Returns:
             list: 完整图片URL列表
         """
+        # 优先尝试 imgs.imgs（doGen* 同步返回格式）
+        imgs_obj = status_response.get("imgs", {})
+        if imgs_obj:
+            imgs_list = imgs_obj.get("imgs", [])
+            if imgs_list:
+                return [self._build_image_url(url) for url in imgs_list if url]
+
+        # 降级：queryStatus 的 imglist 格式
         imglist = status_response.get("imglist", [])
         return [self._build_image_url(filename) for filename in imglist if filename]
 
@@ -422,15 +439,23 @@ class DouhuiAIService:
         params: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        创建多图融合任务
+        创建多图融合任务（PS场景融合）
 
         接口: POST /api/aiart/doBlenderCreate
+        必填参数:
+            dhAiType = "blender"
+            dhInitImgs = JSON数组字符串（至少2张不同图片）
+            dhImgWeight1 = 图片1权重 [0.20-1.00]
+            dhImgWeight2 = 图片2权重 [0.20-1.00]
+            dhImgNum = 出图数量 [1,2,4]
         """
         import json
         extra = params or {}
         form_data: Dict[str, str] = {
             "dhAiType": "blender",
-            "dhInputImgs": json.dumps(image_urls),
+            "dhInitImgs": json.dumps(image_urls),
+            "dhImgWeight1": str(extra.get("dhImgWeight1", "0.7")),
+            "dhImgWeight2": str(extra.get("dhImgWeight2", "0.7")),
             "dhPrompt": prompt,
             "dhImgNum": str(extra.get("dhImgNum", "1")),
         }

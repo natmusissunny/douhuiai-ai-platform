@@ -30,8 +30,8 @@ class ProjectResponse(BaseModel):
     quota_cost: Decimal
     error_message: Optional[str]
     created_at: datetime
-    updated_at: datetime
-    completed_at: Optional[datetime]
+    updated_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

@@ -96,11 +96,13 @@ const ArchitecturePage = () => {
       message.warning('请输入描述');
       return;
     }
-    if (quotaBalance < 20) {
+    // 建筑室内：基础2豆点，高级3豆点
+    const cost = ['concept', 'arch_3d', 'rough_to_fine'].includes(activeType) ? 3 : 2;
+    if (quotaBalance < cost) {
       Modal.error({
         title: '豆点不足',
         icon: <ExclamationCircleOutlined />,
-        content: `当前豆点 ${quotaBalance}，请充值后再试。`,
+        content: `当前豆点 ${quotaBalance}，本操作需要 ${cost} 豆点，请充值后再试。`,
       });
       return;
     }

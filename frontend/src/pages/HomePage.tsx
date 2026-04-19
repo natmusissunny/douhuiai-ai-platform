@@ -7,21 +7,10 @@ import { Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 
-// 左侧导航数据（精简版：只保留4个编辑功能入口）
+// 左侧导航数据（精简版：编辑应用 + 产品电商 + 图片库 + 我的作品）
 const navItems = [
   {
-    label: '图片编辑器',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-        <polyline points="21 15 16 10 5 21"/>
-      </svg>
-    ),
-    path: '/create/edit',
-    sub: [],
-  },
-  {
-    label: '图片精修',
+    label: '编辑应用',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -29,28 +18,43 @@ const navItems = [
       </svg>
     ),
     path: '/create/edit',
-    sub: [],
+    sub: [
+      { label: '图片精修', path: '/create/edit' },
+      { label: 'PS场景融合', path: '/create/edit' },
+      { label: '批量抠图', path: '/create/edit' },
+    ],
   },
   {
-    label: 'PS场景融合',
+    label: '产品电商',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="2" y="2" width="20" height="20" rx="2"/>
-        <path d="M7 2v20"/><path d="M17 2v20"/><path d="M2 12h20"/>
+        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
       </svg>
     ),
-    path: '/create/edit',
-    sub: [],
+    path: '/create/ecommerce',
+    sub: [
+      { label: '一键白底图', path: '/create/ecommerce' },
+      { label: '一键场景图', path: '/create/ecommerce' },
+      { label: '一键卖点图', path: '/create/ecommerce' },
+      { label: 'AI试穿试戴', path: '/create/ecommerce' },
+      { label: '商品图编辑', path: '/create/ecommerce' },
+      { label: '电商换背景', path: '/create/ecommerce' },
+      { label: '模特试衣', path: '/create/ecommerce' },
+      { label: 'AI换模特', path: '/create/ecommerce' },
+      { label: '场景加模特', path: '/create/ecommerce' },
+      { label: 'AI产品设计', path: '/create/ecommerce' },
+    ],
   },
   {
-    label: '长图拼图',
+    label: '图片库',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="3" y="3" width="18" height="18" rx="2"/>
-        <path d="M3 9h18"/><path d="M3 15h18"/>
+        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
       </svg>
     ),
-    path: '/create/edit',
+    path: '/projects',
     sub: [],
   },
   {
@@ -68,28 +72,16 @@ const navItems = [
 
 const features = [
   {
-    icon: '🖼️', title: '图片编辑器', path: '/create/edit',
-    desc: '高清放大、高清重绘、AI扩图',
-    tags: ['高清放大', '高清重绘', 'AI扩图'],
+    icon: '✏️', title: '编辑应用', path: '/create/edit',
+    desc: '图片精修、场景融合、批量抠图',
+    tags: ['图片精修', 'PS场景融合', '批量抠图'],
     bg: '#F0FFF4', iconBg: '#10B981',
   },
   {
-    icon: '✨', title: '图片精修', path: '/create/edit',
-    desc: '一键精修，让图片更清晰',
-    tags: ['智能精修', '细节增强', '画质提升'],
-    bg: '#EEF6FF', iconBg: '#3B82F6',
-  },
-  {
-    icon: '🎬', title: 'PS场景融合', path: '/create/edit',
-    desc: '智能场景融合，无缝合成',
-    tags: ['场景融合', '智能合成', '背景替换'],
+    icon: '🛍️', title: '产品电商', path: '/create/ecommerce',
+    desc: '一键生成商品图，提升转化率',
+    tags: ['商品展示', '场景合成', '模特换装', '批量生成'],
     bg: '#FFF7ED', iconBg: '#F59E0B',
-  },
-  {
-    icon: '📐', title: '长图拼图', path: '/create/edit',
-    desc: '多图拼接，一键生成长图',
-    tags: ['长图拼接', '多图合一', '排版'],
-    bg: '#FEF3F2', iconBg: '#EF4444',
   },
 ];
 
@@ -97,117 +89,112 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
-  const [activeNav, setActiveNav] = useState('AI创作');
+  const [activeNav, setActiveNav] = useState('编辑应用');
 
   return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 88px)', background: '#f5f5f5' }}>
 
-      {/* 左侧导航 — 对齐官网：选中项左侧绿色竖条，hover 弹出子菜单 */}
+      {/* 左侧导航 - 对齐官网：图标+文字横排，36px高，悬停弹出二级 */}
       <aside style={{
-        width: 108,
+        width: 140,
         background: '#fff',
         borderRight: '1px solid #f0f0f0',
         flexShrink: 0,
-        paddingTop: 8,
+        paddingTop: 4,
         position: 'relative',
         zIndex: 100,
       }}>
-        {navItems.map((item) => {
-          const isActive = activeNav === item.label;
-          const isHovered = hoveredNav === item.label;
-          return (
-            <div
-              key={item.label}
-              style={{ position: 'relative' }}
-              onMouseEnter={() => setHoveredNav(item.label)}
-              onMouseLeave={() => setHoveredNav(null)}
+        {navItems.map((item) => (
+          <div
+            key={item.label}
+            style={{ position: 'relative' }}
+            onMouseEnter={() => setHoveredNav(item.label)}
+            onMouseLeave={() => setHoveredNav(null)}
+          >
+            {/* 菜单项 */}
+            <button
+              onClick={() => { setActiveNav(item.label); navigate(item.path); }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                width: '100%',
+                height: 36,
+                padding: '0 12px',
+                border: 'none',
+                background: activeNav === item.label ? '#f0fdf4' : hoveredNav === item.label ? '#f5f5f5' : 'none',
+                cursor: 'pointer',
+                color: activeNav === item.label ? '#16a34a' : 'rgb(37, 38, 40)',
+                fontSize: 13,
+                fontWeight: activeNav === item.label ? 500 : 400,
+                textAlign: 'left',
+                transition: 'all 0.15s',
+                borderRight: activeNav === item.label ? '2px solid #16a34a' : '2px solid transparent',
+              }}
             >
-              {/* 菜单项 */}
-              <button
-                onClick={() => { setActiveNav(item.label); navigate(item.path); }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  width: '100%',
-                  height: 38,
-                  padding: '0 10px 0 14px',
-                  border: 'none',
-                  background: isActive ? '#f0fdf4' : isHovered ? '#f9fafb' : 'transparent',
-                  cursor: 'pointer',
-                  color: isActive ? '#16a34a' : '#252628',
-                  fontSize: 13,
-                  fontWeight: isActive ? 500 : 400,
-                  textAlign: 'left',
-                  transition: 'all 0.15s',
-                  borderLeft: isActive ? '3px solid #16a34a' : '3px solid transparent',
-                  position: 'relative',
-                }}
-              >
-                <span style={{
-                  display: 'flex', alignItems: 'center', flexShrink: 0,
-                  color: isActive ? '#16a34a' : '#606266',
-                }}>
-                  {item.icon}
-                </span>
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {item.label}
-                </span>
-                {item.sub.length > 0 && (
-                  <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0 }}>›</span>
-                )}
-              </button>
-
-              {/* 悬停弹出二级菜单 */}
-              {item.sub.length > 0 && isHovered && (
-                <div style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: '100%',
-                  background: '#fff',
-                  borderRadius: 8,
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
-                  border: '1px solid #eee',
-                  minWidth: 140,
-                  zIndex: 200,
-                  padding: '6px 0',
-                }}>
-                  {item.sub.map((sub) => (
-                    <button
-                      key={sub.label}
-                      onClick={() => { setHoveredNav(null); navigate(sub.path); }}
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '0 20px',
-                        height: 38,
-                        lineHeight: '38px',
-                        border: 'none',
-                        background: 'none',
-                        color: '#252628',
-                        fontSize: 13,
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        transition: 'all 0.1s',
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background = '#f0fdf4';
-                        (e.currentTarget as HTMLButtonElement).style.color = '#16a34a';
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background = 'none';
-                        (e.currentTarget as HTMLButtonElement).style.color = '#252628';
-                      }}
-                    >
-                      {sub.label}
-                    </button>
-                  ))}
-                </div>
+              <span style={{
+                display: 'flex', alignItems: 'center', flexShrink: 0,
+                color: activeNav === item.label ? '#16a34a' : '#606266',
+              }}>
+                {item.icon}
+              </span>
+              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {item.label}
+              </span>
+              {item.sub.length > 0 && (
+                <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0 }}>›</span>
               )}
-            </div>
-          );
-        })}
+            </button>
+
+            {/* 悬停弹出二级菜单 */}
+            {item.sub.length > 0 && hoveredNav === item.label && (
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: '100%',
+                background: '#fff',
+                borderRadius: 8,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                border: '1px solid #f0f0f0',
+                minWidth: 140,
+                zIndex: 200,
+                paddingTop: 4,
+                paddingBottom: 4,
+              }}>
+                {item.sub.map((sub) => (
+                  <button
+                    key={sub.label}
+                    onClick={() => { setHoveredNav(null); navigate(sub.path); }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '0 16px',
+                      height: 36,
+                      border: 'none',
+                      background: 'none',
+                      color: 'rgb(37, 38, 40)',
+                      fontSize: 13,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.1s',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = '#f0fdf4';
+                      (e.currentTarget as HTMLButtonElement).style.color = '#16a34a';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = 'none';
+                      (e.currentTarget as HTMLButtonElement).style.color = 'rgb(37, 38, 40)';
+                    }}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </aside>
 
       {/* 右侧主内容 */}
@@ -216,81 +203,34 @@ const HomePage = () => {
         <div style={{
           background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 50%, #fefce8 100%)',
           borderRadius: 16,
-          padding: '40px 32px',
+          padding: '48px 32px',
           marginBottom: 24,
           border: '1px solid #dcfce7',
           textAlign: 'center',
         }}>
           <h1 style={{ fontSize: 36, fontWeight: 700, color: '#1a1a1a', marginBottom: 8 }}>
-            豆绘 · Agent，<span style={{ color: '#16a34a' }}>让想象自动落地</span>
+            豆绘AI，<span style={{ color: '#16a34a' }}>智能图片编辑</span>
           </h1>
-          <p style={{ color: '#6b7280', fontSize: 16, marginBottom: 24 }}>
-            智能解析需求，自动生成任务，自由无限拓展
+          <p style={{ color: '#6b7280', fontSize: 16, marginBottom: 28 }}>
+            图片精修、场景融合、批量抠图、产品电商，一站式图片处理工具
           </p>
-
-          {/* 输入框卡片 */}
-          <div style={{
-            background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb',
-            padding: '16px 20px', maxWidth: 700, margin: '0 auto',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.06)', textAlign: 'left',
-          }}>
-            <div style={{ display: 'flex', gap: 20, marginBottom: 12, borderBottom: '1px solid #f0f0f0', paddingBottom: 10 }}>
-              {['图像创作', '视频创作', '文案创作'].map((tab, i) => (
-                <button key={tab} style={{
-                  border: 'none', background: 'none', cursor: 'pointer',
-                  fontSize: 14, padding: '0 0 4px',
-                  color: i === 0 ? '#16a34a' : '#9ca3af',
-                  borderBottom: i === 0 ? '2px solid #16a34a' : '2px solid transparent',
-                  fontWeight: i === 0 ? 600 : 400,
-                }}>{tab}</button>
-              ))}
-            </div>
-            <textarea
-              style={{
-                width: '100%', border: 'none', outline: 'none', resize: 'none',
-                fontSize: 14, color: '#9ca3af', minHeight: 60, background: 'transparent',
-                fontFamily: 'inherit',
-              }}
-              placeholder="例如：生成 6 张同风格延展图，保持空间结构一致，细节更..."
-            />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-              <button style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 12px',
-                background: '#fafafa', cursor: 'pointer', color: '#6b7280', fontSize: 12, gap: 2,
-              }}>
-                <span style={{ fontSize: 16 }}>↑</span><span>上传</span>
-              </button>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <button style={{
-                  fontSize: 13, color: '#6b7280', background: '#f3f4f6',
-                  border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 4,
-                }}>🤖 通用创作Ag... ▾</button>
-                <Button
-                  type="primary"
-                  style={{ background: '#16a34a', borderColor: '#16a34a', borderRadius: 8, fontWeight: 500 }}
-                  onClick={() => navigate(isAuthenticated ? '/create/text2img' : '/auth/login')}
-                >提交创作分析 ✦</Button>
-              </div>
-            </div>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <Button
+              type="primary"
+              size="large"
+              style={{ background: '#16a34a', borderColor: '#16a34a', borderRadius: 8, fontWeight: 500 }}
+              onClick={() => navigate(isAuthenticated ? '/create/edit' : '/auth/login')}
+            >开始编辑图片</Button>
+            <Button
+              size="large"
+              style={{ borderRadius: 8 }}
+              onClick={() => navigate(isAuthenticated ? '/create/ecommerce' : '/auth/login')}
+            >产品电商</Button>
           </div>
         </div>
 
         {/* 副标题 */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: '#374151' }}>开始你的创意</h2>
-          <input
-            style={{
-              fontSize: 13, border: '1px solid #e5e7eb', borderRadius: 8,
-              padding: '6px 12px', outline: 'none', color: '#9ca3af', width: 180,
-            }}
-            placeholder="请输入关键词搜索功能"
-          />
-        </div>
-        <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 16 }}>
-          输入一句话让AI帮你绘图，按enter发送，ctrl+enter换行。
-        </p>
+        <h2 style={{ fontSize: 16, fontWeight: 600, color: '#374151', marginBottom: 16 }}>核心功能</h2>
 
         {/* 功能卡片 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
