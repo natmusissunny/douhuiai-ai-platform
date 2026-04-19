@@ -1,7 +1,7 @@
 # Multi-stage build for frontend
 
 # Stage 1: Build
-FROM registry.cn-hangzhou.aliyuncs.com/library/node:22-alpine AS builder
+FROM alibaba-cloud-linux-3-registry.cn-hangzhou.cr.aliyuncs.com/alinux3/node:20.16 AS builder
 
 WORKDIR /app
 
@@ -25,7 +25,7 @@ ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 RUN npm run build
 
 # Stage 2: Production
-FROM registry.cn-hangzhou.aliyuncs.com/library/nginx:alpine
+FROM nginx:alpine
 
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
