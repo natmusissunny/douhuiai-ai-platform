@@ -35,7 +35,8 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      # requirepass is set; healthcheck must authenticate or depends_on never clears
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123}", "--no-auth-warning", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
