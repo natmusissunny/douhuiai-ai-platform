@@ -97,7 +97,7 @@ emnieditor/
 
 ```bash
 git clone https://github.com/natmusissunny/douhuiai-ai-platform.git
-cd emnieditor
+cd douhuiai-ai-platform  # clone 后的默认目录名；若已改名请 cd 到项目根
 
 # 本地开发模式
 bash deploy.sh

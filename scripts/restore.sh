@@ -62,15 +62,15 @@ fi
 echo ""
 
 # 检查Docker是否运行
-if ! docker-compose ps | grep -q "emnieditor-postgres"; then
+if ! docker compose ps | grep -q "emnieditor-postgres"; then
     echo -e "${RED}❌ 错误: PostgreSQL容器未运行${NC}"
-    echo "请先启动服务: docker-compose up -d postgres"
+    echo "请先启动服务: docker compose up -d postgres"
     exit 1
 fi
 
 # 停止应用服务
 echo "⏸️  停止应用服务..."
-docker-compose stop backend celery-worker celery-beat 2>/dev/null || true
+docker compose stop backend celery-worker celery-beat 2>/dev/null || true
 
 echo ""
 
@@ -84,18 +84,18 @@ fi
 
 # 删除现有数据库
 echo "🗑️  删除现有数据库..."
-docker-compose exec -T postgres psql -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE IF EXISTS $POSTGRES_DB;" 2>/dev/null || true
+docker compose exec -T postgres psql -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE IF EXISTS $POSTGRES_DB;" 2>/dev/null || true
 
 # 创建新数据库
 echo "📦 创建新数据库..."
-docker-compose exec -T postgres psql -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE $POSTGRES_DB;" || {
+docker compose exec -T postgres psql -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE $POSTGRES_DB;" || {
     echo -e "${RED}❌ 创建数据库失败${NC}"
     exit 1
 }
 
 # 恢复数据
 echo "🔄 正在恢复数据..."
-if docker-compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < "$TEMP_FILE"; then
+if docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < "$TEMP_FILE"; then
     echo -e "${GREEN}✅ 数据恢复成功${NC}"
 else
     echo -e "${RED}❌ 数据恢复失败${NC}"
@@ -112,7 +112,7 @@ echo ""
 
 # 启动应用服务
 echo "▶️  启动应用服务..."
-docker-compose start backend celery-worker celery-beat
+docker compose start backend celery-worker celery-beat
 
 echo ""
 echo "=========================================="
@@ -120,7 +120,7 @@ echo -e "${GREEN}✅ 恢复完成!${NC}"
 echo "=========================================="
 echo ""
 echo "💡 建议:"
-echo "  - 检查应用状态: docker-compose ps"
-echo "  - 查看应用日志: docker-compose logs -f backend"
+echo "  - 检查应用状态: docker compose ps"
+echo "  - 查看应用日志: docker compose logs -f backend"
 echo "  - 访问应用: http://localhost:8000"
 echo ""

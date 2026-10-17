@@ -68,13 +68,20 @@ if [ ! -f ".env" ]; then
 fi
 
 # 检查上游 API密钥是否已填写
+is_placeholder_key() {
+  case "$1" in
+    ""|"your-app-id-here"|"your-app-secret-here"|"changeme"|"change-me") return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 APP_ID=$(grep -E '^EMNIEDITOR_APP_ID=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
 APP_SECRET=$(grep -E '^EMNIEDITOR_APP_SECRET=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
 
-if [ -z "$APP_ID" ] || [ -z "$APP_SECRET" ]; then
+if is_placeholder_key "$APP_ID" || is_placeholder_key "$APP_SECRET"; then
   echo ""
   echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  warn "请先填写上游 AI API 密钥（必须）："
+  warn "请先填写上游 AI API 密钥（必须，不能使用 .env.example 占位符）："
   echo ""
   echo "  编辑 .env 文件，填写以下两项："
   echo "    EMNIEDITOR_APP_ID=<你的AppID>"
@@ -83,11 +90,17 @@ if [ -z "$APP_ID" ] || [ -z "$APP_SECRET" ]; then
   echo "  密钥可在上游 AI 开放平台获取：https://open.douhuiai.com"
   echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo ""
-  read -r -p "已填写密钥，按回车继续；或按 Ctrl+C 退出... "
+  if [ -t 0 ]; then
+    read -r -p "已填写密钥，按回车继续；或按 Ctrl+C 退出... "
+  else
+    error "非交互环境且密钥为空/占位符，请先编辑 .env 后重试"
+  fi
   # 重新读取
   APP_ID=$(grep -E '^EMNIEDITOR_APP_ID=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
   APP_SECRET=$(grep -E '^EMNIEDITOR_APP_SECRET=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
-  [ -z "$APP_ID" ] || [ -z "$APP_SECRET" ] && error "密钥仍为空，请填写后重新运行"
+  if is_placeholder_key "$APP_ID" || is_placeholder_key "$APP_SECRET"; then
+    error "密钥仍为空或仍是占位符，请填写真实值后重新运行"
+  fi
 fi
 success "上游 API密钥已配置"
 

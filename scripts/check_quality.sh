@@ -26,7 +26,7 @@ echo ""
 
 # Black - 代码格式
 echo "1️⃣  Black (代码格式化检查)"
-if docker-compose exec -T backend black --check app/ tests/ 2>&1; then
+if docker compose exec -T backend black --check app/ tests/ 2>&1; then
     echo -e "${GREEN}✅ Black检查通过${NC}"
 else
     echo -e "${YELLOW}⚠️  格式问题，运行 'make format' 自动修复${NC}"
@@ -36,7 +36,7 @@ echo ""
 
 # isort - 导入排序
 echo "2️⃣  isort (导入排序检查)"
-if docker-compose exec -T backend isort --check-only app/ tests/ 2>&1; then
+if docker compose exec -T backend isort --check-only app/ tests/ 2>&1; then
     echo -e "${GREEN}✅ isort检查通过${NC}"
 else
     echo -e "${YELLOW}⚠️  导入顺序问题，运行 'make format' 自动修复${NC}"
@@ -46,7 +46,7 @@ echo ""
 
 # Flake8 - 代码规范
 echo "3️⃣  Flake8 (代码规范检查)"
-if docker-compose exec -T backend flake8 app/ tests/ 2>&1; then
+if docker compose exec -T backend flake8 app/ tests/ 2>&1; then
     echo -e "${GREEN}✅ Flake8检查通过${NC}"
 else
     echo -e "${RED}❌ 代码规范问题，请手动修复${NC}"
@@ -56,8 +56,8 @@ echo ""
 
 # mypy - 类型检查
 echo "4️⃣  mypy (类型检查)"
-if docker-compose exec -T backend mypy app/ --ignore-missing-imports 2>&1 | grep -E "(Success|error)" ; then
-    if docker-compose exec -T backend mypy app/ --ignore-missing-imports 2>&1 | grep -q "Success" ; then
+if docker compose exec -T backend mypy app/ --ignore-missing-imports 2>&1 | grep -E "(Success|error)" ; then
+    if docker compose exec -T backend mypy app/ --ignore-missing-imports 2>&1 | grep -q "Success" ; then
         echo -e "${GREEN}✅ mypy检查通过${NC}"
     else
         echo -e "${YELLOW}⚠️  类型提示问题，建议修复${NC}"
@@ -73,7 +73,7 @@ echo "${BLUE}🧪 运行测试...${NC}"
 echo ""
 
 echo "5️⃣  pytest (单元测试)"
-if docker-compose exec -T backend pytest tests/ -v --tb=short 2>&1 | tail -20; then
+if docker compose exec -T backend pytest tests/ -v --tb=short 2>&1 | tail -20; then
     echo -e "${GREEN}✅ 测试通过${NC}"
 else
     echo -e "${RED}❌ 测试失败${NC}"
@@ -83,7 +83,7 @@ echo ""
 
 # 测试覆盖率
 echo "6️⃣  Coverage (测试覆盖率)"
-COVERAGE=$(docker-compose exec -T backend pytest tests/ --cov=app --cov-report=term-missing 2>&1 | grep "TOTAL" | awk '{print $4}' | sed 's/%//')
+COVERAGE=$(docker compose exec -T backend pytest tests/ --cov=app --cov-report=term-missing 2>&1 | grep "TOTAL" | awk '{print $4}' | sed 's/%//')
 
 if [ ! -z "$COVERAGE" ]; then
     echo "测试覆盖率: ${COVERAGE}%"
@@ -103,7 +103,7 @@ echo "${BLUE}🔒 安全检查...${NC}"
 echo ""
 
 echo "7️⃣  Safety (依赖安全检查)"
-if docker-compose exec -T backend pip list --format=json | docker run -i --rm pyupio/safety check --stdin 2>&1 | grep -E "(vulnerabilities|No known security vulnerabilities)" | head -1; then
+if docker compose exec -T backend pip list --format=json | docker run -i --rm pyupio/safety check --stdin 2>&1 | grep -E "(vulnerabilities|No known security vulnerabilities)" | head -1; then
     echo -e "${GREEN}✅ 安全检查通过${NC}"
 else
     echo -e "${YELLOW}⚠️  Safety检查跳过 (可选)${NC}"
@@ -142,6 +142,6 @@ else
     echo "修复建议:"
     echo "  - 格式化代码: make format"
     echo "  - 运行测试: make test"
-    echo "  - 查看详情: docker-compose logs backend"
+    echo "  - 查看详情: docker compose logs backend"
     exit 1
 fi
