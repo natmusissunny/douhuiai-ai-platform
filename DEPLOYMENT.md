@@ -1,4 +1,4 @@
-# 豆绘AI平台 - 部署与操作文档
+# EmniEditor - 部署与操作文档
 
 > 最后更新：2026-03-10
 > 适用环境：macOS / Linux + Docker Compose
@@ -22,7 +22,7 @@
 
 ## 项目概述
 
-豆绘AI平台是一个全栈 AI 图片编辑平台，集成豆绘AI API，提供高清放大、高清重绘、AI扩图等核心编辑功能，并附带完整的管理后台。
+EmniEditor是一个全栈 AI 图片编辑平台，集成上游 AI API，提供高清放大、高清重绘、AI扩图等核心编辑功能，并附带完整的管理后台。
 
 **技术栈：**
 - 前端：React 18 + TypeScript + Ant Design 6 + Vite
@@ -51,9 +51,9 @@
 ### 1. 克隆并配置
 
 ```bash
-cd douhuiai-ai-platform
+cd emnieditor
 
-# 复制并编辑环境变量（必须填写豆绘API密钥）
+# 复制并编辑环境变量（必须填写上游 API密钥）
 cp .env.example .env
 vim .env
 ```
@@ -100,8 +100,8 @@ curl http://localhost:8000/health
 
 ```bash
 # ===== 必填 =====
-DOUHUIAI_APP_ID=dh2602mi6lcobtnsmn         # 豆绘AI AppID
-DOUHUIAI_APP_SECRET=<你的AppSecret>          # 豆绘AI AppSecret（不能为空）
+EMNIEDITOR_APP_ID=dh2602mi6lcobtnsmn         # 上游 AI AppID
+EMNIEDITOR_APP_SECRET=<你的AppSecret>          # 上游 AI AppSecret（不能为空）
 
 # ===== 安全相关（生产必须修改）=====
 SECRET_KEY=<随机64位字符串>                   # JWT签名密钥
@@ -201,7 +201,7 @@ docker-compose build frontend && docker-compose up -d frontend
 docker-compose exec backend bash
 
 # 进入数据库
-docker-compose exec postgres psql -U douhuiai -d douhuiai_db
+docker-compose exec postgres psql -U emnieditor -d emnieditor_db
 ```
 
 ### 重新构建
@@ -231,7 +231,7 @@ docker-compose build frontend
 | 角色权限 | 管理角色和权限配置（RBAC） |
 | 项目管理 | 查看所有 AI 生成任务状态 |
 | 数据统计 | 项目类型分布、配额消耗统计 |
-| **余额监控** | 豆绘API余额监控 + 用户配额余额排行 |
+| **余额监控** | 上游 API余额监控 + 用户配额余额排行 |
 | **配额流水** | 所有充值/消费/调整记录，支持按用户/类型/日期筛选 |
 | 系统设置 | 全局配置项 |
 
@@ -244,7 +244,7 @@ docker-compose build frontend
    - **增加**：在当前余额基础上增加
    - **扣除**：在当前余额基础上扣除
 4. 填写操作金额和**必填备注**（记录操作原因）
-5. 弹窗顶部显示当前豆绘API账户余额（低于100元时显示告警）
+5. 弹窗顶部显示当前上游 API账户余额（低于100元时显示告警）
 
 ### 新建用户
 
@@ -270,7 +270,7 @@ docker-compose build frontend
 
 ```bash
 # 连接数据库
-docker-compose exec postgres psql -U douhuiai -d douhuiai_db
+docker-compose exec postgres psql -U emnieditor -d emnieditor_db
 
 # 常用查询
 \dt                          # 列出所有表
@@ -283,10 +283,10 @@ SELECT * FROM projects ORDER BY created_at DESC LIMIT 10;
 
 ```bash
 # 备份
-docker-compose exec postgres pg_dump -U douhuiai douhuiai_db > backup_$(date +%Y%m%d).sql
+docker-compose exec postgres pg_dump -U emnieditor emnieditor_db > backup_$(date +%Y%m%d).sql
 
 # 恢复
-cat backup_20260310.sql | docker-compose exec -T postgres psql -U douhuiai -d douhuiai_db
+cat backup_20260310.sql | docker-compose exec -T postgres psql -U emnieditor -d emnieditor_db
 ```
 
 ### 数据库迁移（Alembic）
@@ -306,10 +306,10 @@ docker-compose exec backend alembic revision --autogenerate -m "描述变更"
 
 ## 已知问题
 
-### 1. 豆绘AI API账户余额不足
+### 1. 上游 AI API账户余额不足
 - **现象**：所有 AI 生成功能返回"总账户余额不足"
 - **原因**：API 账号余额耗尽（当前余额 0.00 元）
-- **解决**：登录豆绘AI官网充值，或联系豆绘AI商务
+- **解决**：登录上游 AI 官网充值，或联系EmniEditor商务
 - **监控**：在管理后台「余额监控」页面查看实时余额，低于100元会显示告警
 
 ### 2. Celery Worker 健康检查显示 unhealthy
@@ -330,9 +330,9 @@ docker-compose exec backend alembic revision --autogenerate -m "描述变更"
 
 ## API 接口说明
 
-### 豆绘AI API集成
+### 上游 AI API集成
 
-项目集成了豆绘AI的以下接口：
+项目集成了EmniEditor的以下接口：
 
 | 功能 | 接口 | 说明 |
 |------|------|------|

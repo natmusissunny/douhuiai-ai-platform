@@ -1,4 +1,4 @@
-# 豆绘AI平台 (Douhuiai AI Platform)
+# EmniEditor
 
 <div align="center">
 
@@ -16,7 +16,7 @@
 
 ## 项目概述
 
-豆绘AI平台是一个全栈 AI 图片编辑平台，集成豆绘AI API，提供图片编辑核心功能，并附带完整的管理后台。
+EmniEditor是一个全栈 AI 图片编辑平台，集成上游 AI API，提供图片编辑核心功能，并附带完整的管理后台。
 
 - **图片编辑**：高清放大、高清重绘、AI扩图
 - **多场景入口**：图片编辑器、图片精修、PS场景融合、长图拼图
@@ -43,7 +43,7 @@
 ## 项目结构
 
 ```
-douhuiai-ai-platform/
+emnieditor/
 ├── deploy.sh                    # 一键部署脚本
 ├── docker-compose.yml           # Docker 编排配置
 ├── .env.example                 # 环境变量模板
@@ -59,7 +59,7 @@ douhuiai-ai-platform/
 │   │   ├── models/              # 数据模型（6 张表）
 │   │   ├── schemas/             # Pydantic 请求/响应模型
 │   │   ├── services/
-│   │   │   ├── douhuiai.py      # 豆绘AI API 客户端
+│   │   │   ├── emnieditor.py      # 上游 AI API 客户端
 │   │   │   └── project.py       # 项目业务逻辑
 │   │   ├── tasks/               # Celery 异步任务
 │   │   └── utils/               # JWT / 密码工具
@@ -97,7 +97,7 @@ douhuiai-ai-platform/
 
 ```bash
 git clone https://github.com/natmusissunny/douhuiai-ai-platform.git
-cd douhuiai-ai-platform
+cd emnieditor
 
 # 本地开发模式
 bash deploy.sh
@@ -109,7 +109,7 @@ bash deploy.sh --prod
 脚本会自动：
 1. 检测 Docker 环境
 2. 创建 `.env`（从 `.env.example` 复制）
-3. 提示填写豆绘AI API 密钥
+3. 提示填写上游 AI API 密钥
 4. 构建镜像、启动所有服务
 5. 等待后端就绪后执行数据库迁移
 
@@ -118,7 +118,7 @@ bash deploy.sh --prod
 ```bash
 # 复制并编辑环境变量
 cp .env.example .env
-# 必须填写：DOUHUIAI_APP_ID 和 DOUHUIAI_APP_SECRET
+# 必须填写：EMNIEDITOR_APP_ID 和 EMNIEDITOR_APP_SECRET
 
 # 启动服务
 docker compose up -d
@@ -167,11 +167,11 @@ docker compose exec backend alembic upgrade head
 | 角色权限 | `/admin/roles` | 角色 CRUD、权限配置 |
 | 项目管理 | `/admin/projects` | 查看所有用户任务状态 |
 | 数据统计 | `/admin/statistics` | 项目类型分布、配额消耗趋势 |
-| 余额监控 | `/admin/quota-monitor` | 豆绘API余额 + 用户配额排行 |
+| 余额监控 | `/admin/quota-monitor` | 上游 API余额 + 用户配额排行 |
 | 配额流水 | `/admin/transactions` | 全部充值/消费记录，支持筛选 |
 | 系统设置 | `/admin/settings` | 全局配置 |
 
-### 豆绘AI API 集成
+### 上游 AI API 集成
 
 | 功能 | 接口 |
 |------|------|
@@ -188,9 +188,9 @@ docker compose exec backend alembic upgrade head
 关键变量说明，完整模板见 `.env.example`：
 
 ```bash
-# 必填：豆绘AI API 密钥
-DOUHUIAI_APP_ID=<你的 AppID>
-DOUHUIAI_APP_SECRET=<你的 AppSecret>
+# 必填：上游 AI API 密钥
+EMNIEDITOR_APP_ID=<你的 AppID>
+EMNIEDITOR_APP_SECRET=<你的 AppSecret>
 
 # 生产环境必须修改
 SECRET_KEY=<随机 64 位字符串>
@@ -226,7 +226,7 @@ docker compose logs -f backend
 docker compose exec backend bash
 
 # 数据库备份
-docker compose exec postgres pg_dump -U douhuiai douhuiai_db > backup.sql
+docker compose exec postgres pg_dump -U emnieditor emnieditor_db > backup.sql
 
 # 重建前端镜像
 docker compose build frontend && docker compose up -d frontend
@@ -238,7 +238,7 @@ docker compose build frontend && docker compose up -d frontend
 
 ## 已知问题
 
-1. **豆绘API余额不足**：账户余额为 0 时，所有 AI 生成功能返回"余额不足"，充值后可正常使用
+1. **上游 API余额不足**：账户余额为 0 时，所有 AI 生成功能返回"余额不足"，充值后可正常使用
 2. **Celery Worker 健康检查显示 unhealthy**：健康检查配置较严格，Worker 实际正常运行，可忽略
 3. **bcrypt 版本告警**：passlib 与 bcrypt 版本兼容性警告，不影响功能
 

@@ -7,7 +7,7 @@ from app.config import settings
 
 # 创建 Celery 应用
 celery_app = Celery(
-    "douhuiai",
+    "emnieditor",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
 )

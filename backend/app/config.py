@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     """应用配置"""
 
     # Application
-    APP_NAME: str = "Douhuiai AI Platform"
+    APP_NAME: str = "EmniEditor"
     APP_VERSION: str = "0.1.0"
     DEBUG: bool = True
     ENVIRONMENT: str = "development"
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
 
     # Database
-    DATABASE_URL: str = "postgresql://user:password@localhost:5432/douhuiai_db"
+    DATABASE_URL: str = "postgresql://user:password@localhost:5432/emnieditor_db"
     DATABASE_ECHO: bool = False
 
     # Redis
@@ -38,10 +38,10 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # External API
-    DOUHUIAI_API_URL: str = "https://dhd.douhuiai.com"
-    DOUHUIAI_APP_ID: str = ""
-    DOUHUIAI_APP_SECRET: str = ""
-    DOUHUIAI_IMG_BASE_URL: str = "https://img2.douhuiai.com/dhimg/"
+    EMNIEDITOR_API_URL: str = "https://dhd.douhuiai.com"
+    EMNIEDITOR_APP_ID: str = ""
+    EMNIEDITOR_APP_SECRET: str = ""
+    EMNIEDITOR_IMG_BASE_URL: str = "https://img2.douhuiai.com/dhimg/"
 
     # File Storage
     STORAGE_TYPE: str = "local"  # local / oss / s3

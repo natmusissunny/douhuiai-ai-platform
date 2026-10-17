@@ -120,7 +120,7 @@ export const AdminLayout: React.FC = () => {
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-center text-white text-xl font-bold">
-          {collapsed ? '豆绘' : '豆绘AI 管理后台'}
+          {collapsed ? 'EmniEditor' : 'EmniEditor 管理后台'}
         </div>
 
         {/* 菜单 */}

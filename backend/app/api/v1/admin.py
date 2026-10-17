@@ -38,7 +38,7 @@ from app.schemas.admin import (
     BatchUserDeleteResponse,
 )
 from app.config import settings
-from app.services.douhuiai import douhuiai_service
+from app.services.emnieditor import emnieditor_service
 import httpx
 
 router = APIRouter()
@@ -621,17 +621,17 @@ async def list_quota_transactions(
     return {"total": total, "items": items}
 
 
-# ==================== 豆绘 API 余额监控 ====================
+# ==================== EmniEditor API 余额监控 ====================
 
 @router.get("/api-balance", response_model=ApiBalanceResponse)
 async def get_api_balance(
     current_user: User = Depends(require_permission("stats.view")),
 ):
     """
-    查询豆绘 API 账户余额（通过 getapiaccount 接口实时查询）
+    查询EmniEditor API 账户余额（通过 getapiaccount 接口实时查询）
     """
     try:
-        result = await douhuiai_service.get_account_balance()
+        result = await emnieditor_service.get_account_balance()
         # 返回格式: {"code": 200, "data": {"balance": 19560}, "msg": "success"}
         balance = float(result.get("data", {}).get("balance", 0))
     except Exception:
@@ -640,7 +640,7 @@ async def get_api_balance(
     WARNING_THRESHOLD = 100.0
     return {
         "balance": balance,
-        "app_id": settings.DOUHUIAI_APP_ID,
+        "app_id": settings.EMNIEDITOR_APP_ID,
         "warning": balance >= 0 and balance < WARNING_THRESHOLD,
         "warning_threshold": WARNING_THRESHOLD,
     }

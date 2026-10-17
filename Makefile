@@ -13,7 +13,7 @@ NC := \033[0m # No Color
 ##@ 帮助
 
 help: ## 显示帮助信息
-	@echo "$(BLUE)豆绘AI平台 - Makefile 命令$(NC)"
+	@echo "$(BLUE)EmniEditor - Makefile 命令$(NC)"
 	@echo ""
 	@awk 'BEGIN {FS = ":.*##"; printf "使用方法:\n  make $(YELLOW)<target>$(NC)\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  $(GREEN)%-15s$(NC) %s\n", $$1, $$2 } /^##@/ { printf "\n$(BLUE)%s$(NC)\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
@@ -74,7 +74,7 @@ db-rollback: ## 回滚数据库迁移
 	docker-compose exec backend alembic downgrade -1
 
 db-shell: ## 进入PostgreSQL shell
-	docker-compose exec postgres psql -U douhuiai douhuiai_db
+	docker-compose exec postgres psql -U emnieditor emnieditor_db
 
 backup: ## 备份数据库
 	@echo "$(BLUE)💾 备份数据库...$(NC)"
@@ -158,7 +158,7 @@ health: ## 检查服务健康状态
 	@echo -n "后端API: "
 	@curl -s http://localhost:8000/health > /dev/null && echo "$(GREEN)✅ 正常$(NC)" || echo "$(RED)❌ 异常$(NC)"
 	@echo -n "PostgreSQL: "
-	@docker-compose exec postgres pg_isready -U douhuiai > /dev/null 2>&1 && echo "$(GREEN)✅ 正常$(NC)" || echo "$(RED)❌ 异常$(NC)"
+	@docker-compose exec postgres pg_isready -U emnieditor > /dev/null 2>&1 && echo "$(GREEN)✅ 正常$(NC)" || echo "$(RED)❌ 异常$(NC)"
 	@echo -n "Redis: "
 	@docker-compose exec redis redis-cli ping > /dev/null 2>&1 && echo "$(GREEN)✅ 正常$(NC)" || echo "$(RED)❌ 异常$(NC)"
 
@@ -178,11 +178,11 @@ stats: ## 显示资源使用统计
 disk: ## 显示磁盘使用情况
 	@echo "$(BLUE)💾 磁盘使用情况:$(NC)"
 	@echo "Docker 镜像:"
-	@docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}" | grep douhuiai
+	@docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}" | grep emnieditor
 	@echo ""
 	@echo "Docker 卷:"
-	@docker volume ls --filter name=douhuiai --format "table {{.Name}}\t{{.Driver}}"
-	@df -h | grep -E '(Filesystem|douhuiai)' || true
+	@docker volume ls --filter name=emnieditor --format "table {{.Name}}\t{{.Driver}}"
+	@df -h | grep -E '(Filesystem|emnieditor)' || true
 
 ##@ 生产环境
 
@@ -201,7 +201,7 @@ prod-down: ## 停止生产环境
 ##@ 实用工具
 
 version: ## 显示版本信息
-	@echo "$(BLUE)豆绘AI平台 v0.9.0$(NC)"
+	@echo "$(BLUE)EmniEditor v0.9.0$(NC)"
 	@echo "Python: $$(docker-compose exec backend python --version 2>&1)"
 	@echo "Node.js: $$(docker-compose exec frontend node --version 2>&1)"
 	@echo "Docker: $$(docker --version)"

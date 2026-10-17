@@ -15,7 +15,7 @@ from app.api.v1 import api_router
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="豆绘AI平台 - AI创意生成服务",
+    description="EmniEditor - AI创意生成服务",
     docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None,
 )
@@ -72,13 +72,13 @@ async def startup_event():
             user_role = db.query(Role).filter(Role.name == "user").first()
             users = [
                 User(
-                    username="admin", email="admin@douhuiai.com",
+                    username="admin", email="admin@emnieditor.com",
                     password_hash=get_password_hash("admin123"),
                     role_id=admin_role.id, quota_balance=10000.00,
                     status="active", is_verified=True,
                 ),
                 User(
-                    username="testuser", email="test@douhuiai.com",
+                    username="testuser", email="test@emnieditor.com",
                     password_hash=get_password_hash("test123"),
                     role_id=user_role.id, quota_balance=100.00,
                     status="active", is_verified=True,

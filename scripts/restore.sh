@@ -13,7 +13,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo "=========================================="
-echo "🔄 豆绘AI平台 - 数据库恢复工具"
+echo "🔄 EmniEditor - 数据库恢复工具"
 echo "=========================================="
 echo ""
 
@@ -41,8 +41,8 @@ if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
 fi
 
-POSTGRES_DB=${POSTGRES_DB:-douhuiai_db}
-POSTGRES_USER=${POSTGRES_USER:-douhuiai}
+POSTGRES_DB=${POSTGRES_DB:-emnieditor_db}
+POSTGRES_USER=${POSTGRES_USER:-emnieditor}
 
 echo "⚠️  警告: 此操作将删除现有数据库并恢复到备份状态"
 echo ""
@@ -62,7 +62,7 @@ fi
 echo ""
 
 # 检查Docker是否运行
-if ! docker-compose ps | grep -q "douhuiai-postgres"; then
+if ! docker-compose ps | grep -q "emnieditor-postgres"; then
     echo -e "${RED}❌ 错误: PostgreSQL容器未运行${NC}"
     echo "请先启动服务: docker-compose up -d postgres"
     exit 1

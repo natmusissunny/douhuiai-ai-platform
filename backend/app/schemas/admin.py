@@ -130,7 +130,7 @@ class TransactionListResponse(BaseModel):
 
 
 class ApiBalanceResponse(BaseModel):
-    """豆绘 API 账户余额"""
+    """EmniEditor API 账户余额"""
     balance: float
     app_id: str
     warning: bool        # 是否低余额告警（< 100）

@@ -25,7 +25,7 @@ export const SettingsPage: React.FC = () => {
 
   // Mock初始值 - 实际应该从API获取
   const initialValues = {
-    site_name: '豆绘AI平台',
+    site_name: 'EmniEditor',
     site_description: '专业的AI创作平台',
     allow_registration: true,
     require_email_verification: true,

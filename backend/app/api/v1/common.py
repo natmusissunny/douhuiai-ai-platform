@@ -2,7 +2,7 @@
 公共数据查询接口
 
 提供模型列表、画风列表、分类列表、Lora模板、ControlNet列表、出图尺寸、账户余额等公共数据。
-这些接口代理豆绘AI官方API，供前端动态加载选项使用。
+这些接口代理EmniEditor官方API，供前端动态加载选项使用。
 """
 
 import time
@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Query
 
-from app.services.douhuiai import douhuiai_service
+from app.services.emnieditor import emnieditor_service
 
 router = APIRouter()
 
@@ -40,7 +40,7 @@ async def get_models(aitype: str = Query(default="", description="创作类型�
     cached = _get_cached(cache_key)
     if cached:
         return cached
-    result = await douhuiai_service.get_model_list(aitype)
+    result = await emnieditor_service.get_model_list(aitype)
     _set_cached(cache_key, result)
     return result
 
@@ -51,7 +51,7 @@ async def get_styles():
     cached = _get_cached("styles")
     if cached:
         return cached
-    result = await douhuiai_service.get_style_list()
+    result = await emnieditor_service.get_style_list()
     _set_cached("styles", result)
     return result
 
@@ -63,7 +63,7 @@ async def get_categories(pid: str = Query(default="0", description="父级分类
     cached = _get_cached(cache_key)
     if cached:
         return cached
-    result = await douhuiai_service.get_category_list(pid)
+    result = await emnieditor_service.get_category_list(pid)
     _set_cached(cache_key, result)
     return result
 
@@ -75,7 +75,7 @@ async def get_lora(aitype: str = Query(default="", description="创作类型筛�
     cached = _get_cached(cache_key)
     if cached:
         return cached
-    result = await douhuiai_service.get_lora_list(aitype)
+    result = await emnieditor_service.get_lora_list(aitype)
     _set_cached(cache_key, result)
     return result
 
@@ -87,7 +87,7 @@ async def get_controlnet(aitype: str = Query(default="", description="创作类�
     cached = _get_cached(cache_key)
     if cached:
         return cached
-    result = await douhuiai_service.get_controlnet_list(aitype)
+    result = await emnieditor_service.get_controlnet_list(aitype)
     _set_cached(cache_key, result)
     return result
 
@@ -99,7 +99,7 @@ async def get_sizes(aitype: str = Query(default="", description="创作类型筛
     cached = _get_cached(cache_key)
     if cached:
         return cached
-    result = await douhuiai_service.get_image_sizes(aitype)
+    result = await emnieditor_service.get_image_sizes(aitype)
     _set_cached(cache_key, result)
     return result
 
@@ -110,7 +110,7 @@ async def get_voices():
     cached = _get_cached("voices")
     if cached:
         return cached
-    result = await douhuiai_service.get_voice_list()
+    result = await emnieditor_service.get_voice_list()
     _set_cached("voices", result)
     return result
 
@@ -119,4 +119,4 @@ async def get_voices():
 async def get_account_balance():
     """获取API账户积分余额"""
     # 余额不缓存，实时查询
-    return await douhuiai_service.get_account_balance()
+    return await emnieditor_service.get_account_balance()

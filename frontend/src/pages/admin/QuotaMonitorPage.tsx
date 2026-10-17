@@ -166,19 +166,19 @@ export const QuotaMonitorPage: React.FC = () => {
 
       {/* 系统配额概览 */}
       <Spin spinning={loading}>
-        {/* 第一行：豆绘API上游余额 */}
+        {/* 第一行：上游 API上游余额 */}
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col span={8}>
             <Card>
               <Statistic
-                title="豆绘API剩余豆点（上游账户）"
+                title="上游 API剩余豆点（上游账户）"
                 value={apiBalance ?? 0}
                 prefix={<CloudOutlined />}
                 valueStyle={{ color: apiBalance !== null && apiBalance < 1000 ? '#ff4d4f' : '#3f8600', fontSize: 28 }}
               />
               {apiBalance !== null && apiBalance < 1000 && (
                 <div style={{ marginTop: 8, color: '#ff4d4f', fontSize: 12 }}>
-                  上游余额不足，请尽快充值豆绘API账户
+                  上游余额不足，请尽快充值上游 API账户
                 </div>
               )}
             </Card>

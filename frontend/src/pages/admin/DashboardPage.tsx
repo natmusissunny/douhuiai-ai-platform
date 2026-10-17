@@ -24,7 +24,7 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     fetchSystemStats();
-    // 获取豆绘API上游账户余额
+    // 获取上游 API上游账户余额
     setApiBalanceLoading(true);
     getAccountBalance()
       .then((res) => setApiBalance(res?.data?.balance ?? null))
@@ -52,15 +52,15 @@ export const DashboardPage: React.FC = () => {
     <div>
       <Title level={2}>数据概览</Title>
 
-      {/* 豆绘API上游账户余额 */}
+      {/* 上游 API上游账户余额 */}
       <Title level={4} className="mt-2 mb-4">
-        API账户（上游豆绘AI）
+        API账户（上游EmniEditor）
       </Title>
       <Row gutter={[16, 16]} className="mb-2">
         <Col xs={24} sm={12} lg={8}>
           <Card loading={apiBalanceLoading}>
             <Statistic
-              title="豆绘API剩余豆点"
+              title="上游 API剩余豆点"
               value={apiBalance ?? 0}
               prefix={<CloudOutlined />}
               valueStyle={{ color: apiBalance !== null && apiBalance < 1000 ? '#ff4d4f' : '#3f8600' }}

@@ -1,4 +1,4 @@
-# 豆绘AI平台 - 开发任务清单
+# EmniEditor - 开发任务清单
 
 ## 项目概览
 
@@ -164,8 +164,8 @@
 
 ### 2.1 外部API集成
 
-- [ ] **豆绘AI客户端封装**
-  - [ ] 创建 `app/services/douhuiai_client.py`
+- [ ] **EmniEditor客户端封装**
+  - [ ] 创建 `app/services/emnieditor_client.py`
   - [ ] 实现认证逻辑
     - [ ] 测试不同的认证方式 (Header/Body)
     - [ ] 确定正确的认证方式

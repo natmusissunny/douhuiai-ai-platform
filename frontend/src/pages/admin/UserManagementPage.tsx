@@ -211,7 +211,7 @@ export const UserManagementPage: React.FC = () => {
     batchCreateForm.resetFields();
     batchCreateForm.setFieldsValue({ users: [{}] });
     generateForm.resetFields();
-    generateForm.setFieldsValue({ count: 10, prefix: 'user', password: 'Douhuai@2026', emailSuffix: '@douhuiai.com', quota_balance: 0 });
+    generateForm.setFieldsValue({ count: 10, prefix: 'user', password: 'EmniEditor@2026', emailSuffix: '@emnieditor.com', quota_balance: 0 });
     setCsvUsers([]);
     setCsvErrors([]);
     setBatchTab('manual');
@@ -704,7 +704,7 @@ export const UserManagementPage: React.FC = () => {
           {apiBalance && (
             <Alert
               type={apiBalance.warning ? 'warning' : 'info'}
-              message={`豆绘API账户余额: ${apiBalance.balance.toFixed(2)} 元${apiBalance.warning ? '（余额不足，请及时充值）' : ''}`}
+              message={`上游 API账户余额: ${apiBalance.balance.toFixed(2)} 元${apiBalance.warning ? '（余额不足，请及时充值）' : ''}`}
               style={{ marginBottom: 16 }}
             />
           )}
@@ -963,9 +963,9 @@ export const UserManagementPage: React.FC = () => {
                     label="邮箱后缀"
                     name="emailSuffix"
                     rules={[{ required: true, message: '请输入邮箱后缀' }]}
-                    extra="生成格式：user001@douhuiai.com"
+                    extra="生成格式：user001@emnieditor.com"
                   >
-                    <Input placeholder="@douhuiai.com" />
+                    <Input placeholder="@emnieditor.com" />
                   </Form.Item>
                   <Form.Item label="统一初始配额" name="quota_balance">
                     <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder="默认0" />

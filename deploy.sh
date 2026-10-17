@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# 豆绘AI平台 - 一键部署脚本
+# EmniEditor - 一键部署脚本
 # 用法: bash deploy.sh [--prod]
 #   不带参数：本地开发模式（热重载，DEBUG=True）
 #   --prod   ：生产模式（自动生成随机密钥）
@@ -36,7 +36,7 @@ done
 
 echo ""
 echo "================================================"
-echo "       豆绘AI平台 一键部署脚本"
+echo "       EmniEditor 一键部署脚本"
 if $PROD_MODE; then
   echo "       模式: 生产 (Production)"
 else
@@ -67,29 +67,29 @@ if [ ! -f ".env" ]; then
   success ".env 已创建"
 fi
 
-# 检查豆绘API密钥是否已填写
-APP_ID=$(grep -E '^DOUHUIAI_APP_ID=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
-APP_SECRET=$(grep -E '^DOUHUIAI_APP_SECRET=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
+# 检查上游 API密钥是否已填写
+APP_ID=$(grep -E '^EMNIEDITOR_APP_ID=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
+APP_SECRET=$(grep -E '^EMNIEDITOR_APP_SECRET=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
 
 if [ -z "$APP_ID" ] || [ -z "$APP_SECRET" ]; then
   echo ""
   echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  warn "请先填写豆绘AI API 密钥（必须）："
+  warn "请先填写上游 AI API 密钥（必须）："
   echo ""
   echo "  编辑 .env 文件，填写以下两项："
-  echo "    DOUHUIAI_APP_ID=<你的AppID>"
-  echo "    DOUHUIAI_APP_SECRET=<你的AppSecret>"
+  echo "    EMNIEDITOR_APP_ID=<你的AppID>"
+  echo "    EMNIEDITOR_APP_SECRET=<你的AppSecret>"
   echo ""
-  echo "  密钥可在豆绘AI开放平台获取：https://open.douhuiai.com"
+  echo "  密钥可在上游 AI 开放平台获取：https://open.douhuiai.com"
   echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo ""
   read -r -p "已填写密钥，按回车继续；或按 Ctrl+C 退出... "
   # 重新读取
-  APP_ID=$(grep -E '^DOUHUIAI_APP_ID=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
-  APP_SECRET=$(grep -E '^DOUHUIAI_APP_SECRET=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
+  APP_ID=$(grep -E '^EMNIEDITOR_APP_ID=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
+  APP_SECRET=$(grep -E '^EMNIEDITOR_APP_SECRET=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
   [ -z "$APP_ID" ] || [ -z "$APP_SECRET" ] && error "密钥仍为空，请填写后重新运行"
 fi
-success "豆绘API密钥已配置"
+success "上游 API密钥已配置"
 
 # 生产模式：自动生成安全密钥
 if $PROD_MODE; then
@@ -108,7 +108,7 @@ if $PROD_MODE; then
   fi
 
   PG_PASS=$(grep -E '^POSTGRES_PASSWORD=' .env | cut -d'=' -f2 | tr -d '"' | tr -d "'" | xargs)
-  if [ -z "$PG_PASS" ] || [ "$PG_PASS" = "douhuiai_password" ]; then
+  if [ -z "$PG_PASS" ] || [ "$PG_PASS" = "emnieditor_password" ]; then
     NEW_PG_PASS=$(openssl rand -hex 16 2>/dev/null || python3 -c "import secrets; print(secrets.token_hex(16))")
     if grep -q '^POSTGRES_PASSWORD=' .env; then
       sed -i.bak "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$NEW_PG_PASS|" .env && rm -f .env.bak

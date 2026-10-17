@@ -1,4 +1,4 @@
-# 豆绘AI平台 - 前端应用
+# EmniEditor - 前端应用
 
 **版本**: v1.0.0 RC1
 **框架**: React 18
@@ -8,7 +8,7 @@
 
 ## 📋 项目概述
 
-豆绘AI平台的前端应用，基于React 18 + TypeScript + Vite构建的现代化单页应用（SPA）。
+EmniEditor的前端应用，基于React 18 + TypeScript + Vite构建的现代化单页应用（SPA）。
 
 ### 核心功能
 

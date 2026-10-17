@@ -26,7 +26,7 @@ from app.schemas.project import (
     ProjectListResponse,
 )
 from app.services.project import project_service
-from app.services.douhuiai import douhuiai_service
+from app.services.emnieditor import emnieditor_service
 from app.tasks.project_tasks import (
     process_text2img_task,
     process_img2img_task,
@@ -75,14 +75,14 @@ async def create_text2img(
         input_params=params,
     )
 
-    # 异步调用豆绘AI API
+    # 异步调用上游 AI API
     try:
-        api_response = await douhuiai_service.create_text2img_task(request.prompt, params)
+        api_response = await emnieditor_service.create_text2img_task(request.prompt, params)
         # UUID 在顶层或 data 中（兼容两种格式）
         project.uuid = api_response.get("uuid") or api_response.get("data", {}).get("uuid")
 
         # doGenKontext 可能同步返回图片结果（imgs 字段）
-        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        result_urls = emnieditor_service.parse_edit_result_urls(api_response)
         if result_urls:
             project_service.update_project_status(
                 db, project, "completed", progress=100,
@@ -133,24 +133,24 @@ async def create_img2img(
     )
 
     try:
-        # base64 图片先上传到豆绘 CDN，获得可访问的 URL
+        # base64 图片先上传到EmniEditor CDN，获得可访问的 URL
         image_url = request.image_url
         if image_url.startswith("data:"):
             import base64
             header, b64data = image_url.split(",", 1)
             file_bytes = base64.b64decode(b64data)
             ext = "jpg" if "jpeg" in header else "png"
-            image_url = await douhuiai_service.upload_image(file_bytes, f"upload.{ext}")
+            image_url = await emnieditor_service.upload_image(file_bytes, f"upload.{ext}")
 
-        # 调用真实的豆绘AI API
-        api_response = await douhuiai_service.create_img2img_task(
+        # 调用真实的上游 AI API
+        api_response = await emnieditor_service.create_img2img_task(
             image_url, request.prompt, params
         )
         # UUID 在顶层或 data 中（兼容两种格式）
         project.uuid = api_response.get("uuid") or api_response.get("data", {}).get("uuid")
 
         # doGenKontext 可能同步返回图片结果
-        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        result_urls = emnieditor_service.parse_edit_result_urls(api_response)
         if result_urls:
             project_service.update_project_status(
                 db, project, "completed", progress=100,
@@ -207,7 +207,7 @@ async def create_edit(
             header, b64data = image_url.split(",", 1)
             file_bytes = b64mod.b64decode(b64data)
             ext = "jpg" if "jpeg" in header else "png"
-            image_url = await douhuiai_service.upload_image(file_bytes, f"upload.{ext}")
+            image_url = await emnieditor_service.upload_image(file_bytes, f"upload.{ext}")
 
         # 额外参数中的蒙版图（万物替换 dhMaskImg）也可能是 base64
         extra_params = dict(request.params or {})
@@ -215,7 +215,7 @@ async def create_edit(
             mask_header, mask_b64 = extra_params["dhMaskImg"].split(",", 1)
             mask_bytes = b64mod.b64decode(mask_b64)
             mask_ext = "jpg" if "jpeg" in mask_header else "png"
-            extra_params["dhMaskImg"] = await douhuiai_service.upload_image(mask_bytes, f"mask.{mask_ext}")
+            extra_params["dhMaskImg"] = await emnieditor_service.upload_image(mask_bytes, f"mask.{mask_ext}")
 
         # PS场景融合走多图融合接口 doBlenderCreate
         if request.edit_type == "ps_scene_merge":
@@ -225,20 +225,20 @@ async def create_edit(
                 h2, b2 = image_url2.split(",", 1)
                 fb2 = b64mod.b64decode(b2)
                 ext2 = "jpg" if "jpeg" in h2 else "png"
-                image_url2 = await douhuiai_service.upload_image(fb2, f"blend2.{ext2}")
+                image_url2 = await emnieditor_service.upload_image(fb2, f"blend2.{ext2}")
             prompt = extra_params.pop("dhPrompt", "两张图片融合")
-            api_response = await douhuiai_service.create_blender_task(
+            api_response = await emnieditor_service.create_blender_task(
                 [image_url, image_url2], prompt, extra_params
             )
         else:
             # 常规编辑走 doEdit
-            api_response = await douhuiai_service.create_edit_task(
+            api_response = await emnieditor_service.create_edit_task(
                 image_url, request.edit_type, extra_params or None
             )
         project.uuid = api_response.get("uuid")
 
         # doEdit / doBlenderCreate 可能同步返回图片结果
-        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        result_urls = emnieditor_service.parse_edit_result_urls(api_response)
         if result_urls:
             project_service.update_project_status(
                 db, project, "completed", progress=100,
@@ -288,14 +288,14 @@ async def create_3d_render(
     )
 
     try:
-        api_response = await douhuiai_service.create_3d_render_task(
+        api_response = await emnieditor_service.create_3d_render_task(
             request.model_type, request.prompt, params
         )
         # UUID 在顶层或 data 中（兼容两种格式）
         project.uuid = api_response.get("uuid") or api_response.get("data", {}).get("uuid")
 
         # doGenKontext 可能同步返回图片结果
-        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        result_urls = emnieditor_service.parse_edit_result_urls(api_response)
         if result_urls:
             project_service.update_project_status(
                 db, project, "completed", progress=100,
@@ -343,14 +343,14 @@ async def create_repaint(
             header, b64data = image_url.split(",", 1)
             file_bytes = b64mod.b64decode(b64data)
             ext = "jpg" if "jpeg" in header else "png"
-            image_url = await douhuiai_service.upload_image(file_bytes, f"repaint.{ext}")
+            image_url = await emnieditor_service.upload_image(file_bytes, f"repaint.{ext}")
 
-        api_response = await douhuiai_service.create_repaint_task(
+        api_response = await emnieditor_service.create_repaint_task(
             image_url, request.prompt, request.mode, request.params
         )
         project.uuid = api_response.get("uuid")
 
-        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        result_urls = emnieditor_service.parse_edit_result_urls(api_response)
         if result_urls:
             project_service.update_project_status(
                 db, project, "completed", progress=100,
@@ -392,16 +392,16 @@ async def create_model(
             header, b64data = image_url.split(",", 1)
             file_bytes = b64mod.b64decode(b64data)
             ext = "jpg" if "jpeg" in header else "png"
-            image_url = await douhuiai_service.upload_image(file_bytes, f"model_ref.{ext}")
+            image_url = await emnieditor_service.upload_image(file_bytes, f"model_ref.{ext}")
 
-        api_response = await douhuiai_service.create_model_task(
+        api_response = await emnieditor_service.create_model_task(
             request.model, request.prompt, image_url, request.params
         )
         project.uuid = api_response.get("uuid") or api_response.get("data", {}).get("uuid")
 
-        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        result_urls = emnieditor_service.parse_edit_result_urls(api_response)
         if not result_urls:
-            result_urls = douhuiai_service.parse_result_urls(api_response)
+            result_urls = emnieditor_service.parse_result_urls(api_response)
         if result_urls:
             project_service.update_project_status(
                 db, project, "completed", progress=100,
@@ -453,14 +453,14 @@ async def create_architecture(
             header, b64data = image_url.split(",", 1)
             file_bytes = b64mod.b64decode(b64data)
             ext = "jpg" if "jpeg" in header else "png"
-            image_url = await douhuiai_service.upload_image(file_bytes, f"arch.{ext}")
+            image_url = await emnieditor_service.upload_image(file_bytes, f"arch.{ext}")
 
-        api_response = await douhuiai_service.create_architecture_task(
+        api_response = await emnieditor_service.create_architecture_task(
             request.arch_type, image_url, request.prompt, request.params
         )
         project.uuid = api_response.get("uuid")
 
-        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        result_urls = emnieditor_service.parse_edit_result_urls(api_response)
         if result_urls:
             project_service.update_project_status(
                 db, project, "completed", progress=100,
@@ -523,23 +523,23 @@ async def create_video(
             header, b64data = image_url.split(",", 1)
             file_bytes = b64mod.b64decode(b64data)
             ext = "jpg" if "jpeg" in header else "png"
-            image_url = await douhuiai_service.upload_image(file_bytes, f"video_input.{ext}")
+            image_url = await emnieditor_service.upload_image(file_bytes, f"video_input.{ext}")
 
         # 文生音频走单独接口
         if request.video_type == "text2voice":
             extra = request.params or {}
-            api_response = await douhuiai_service.create_audio_task(
+            api_response = await emnieditor_service.create_audio_task(
                 request.prompt, str(extra.get("dhVoiceId", "")),
                 extra.get("dhEmotion")
             )
         else:
-            api_response = await douhuiai_service.create_video_task(
+            api_response = await emnieditor_service.create_video_task(
                 request.video_type, request.prompt, image_url, request.params
             )
 
         project.uuid = api_response.get("uuid")
 
-        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        result_urls = emnieditor_service.parse_edit_result_urls(api_response)
         if result_urls:
             project_service.update_project_status(
                 db, project, "completed", progress=100,
@@ -597,14 +597,14 @@ async def create_ecommerce(
             header, b64data = image_url.split(",", 1)
             file_bytes = b64mod.b64decode(b64data)
             ext = "jpg" if "jpeg" in header else "png"
-            image_url = await douhuiai_service.upload_image(file_bytes, f"product.{ext}")
+            image_url = await emnieditor_service.upload_image(file_bytes, f"product.{ext}")
 
-        api_response = await douhuiai_service.create_ecommerce_task(
+        api_response = await emnieditor_service.create_ecommerce_task(
             request.ecommerce_type, image_url, request.prompt, request.params
         )
         project.uuid = api_response.get("uuid")
 
-        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        result_urls = emnieditor_service.parse_edit_result_urls(api_response)
         if result_urls:
             project_service.update_project_status(
                 db, project, "completed", progress=100,
@@ -668,7 +668,7 @@ async def create_portrait(
             header, b64data = image_url.split(",", 1)
             file_bytes = b64mod.b64decode(b64data)
             ext = "jpg" if "jpeg" in header else "png"
-            image_url = await douhuiai_service.upload_image(file_bytes, f"portrait.{ext}")
+            image_url = await emnieditor_service.upload_image(file_bytes, f"portrait.{ext}")
 
         # 人脸图：base64 → CDN URL
         face_url = request.face_url
@@ -676,16 +676,16 @@ async def create_portrait(
             header, b64data = face_url.split(",", 1)
             file_bytes = b64mod.b64decode(b64data)
             ext = "jpg" if "jpeg" in header else "png"
-            face_url = await douhuiai_service.upload_image(file_bytes, f"face.{ext}")
+            face_url = await emnieditor_service.upload_image(file_bytes, f"face.{ext}")
 
-        # 调用豆绘AI人像写真API
-        api_response = await douhuiai_service.create_portrait_task(
+        # 调用EmniEditor人像写真API
+        api_response = await emnieditor_service.create_portrait_task(
             request.portrait_type, image_url, face_url, request.params
         )
         project.uuid = api_response.get("uuid")
 
         # 专用端点可能直接返回结果
-        result_urls = douhuiai_service.parse_edit_result_urls(api_response)
+        result_urls = emnieditor_service.parse_edit_result_urls(api_response)
         if result_urls:
             project_service.update_project_status(
                 db, project, "completed", progress=100,

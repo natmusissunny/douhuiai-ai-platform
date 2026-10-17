@@ -1,6 +1,6 @@
 # 贡献指南
 
-感谢您对豆绘AI平台项目的关注！我们欢迎各种形式的贡献。
+感谢您对EmniEditor项目的关注！我们欢迎各种形式的贡献。
 
 ---
 
@@ -116,7 +116,7 @@
 ```bash
 # 克隆项目
 git clone <your-fork-url>
-cd douhuiai-ai-platform
+cd emnieditor
 
 # 初始化项目
 make init
@@ -482,6 +482,6 @@ Fixes #(issue编号)
 
 <div align="center">
 
-**让我们一起构建更好的豆绘AI平台！** 🎉
+**让我们一起构建更好的EmniEditor！** 🎉
 
 </div>

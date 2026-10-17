@@ -1,5 +1,5 @@
 id: DAP-202602
-name: Douhuiai AI Platform
+name: EmniEditor
 description: ''
 version: 0.1.0
 created_at: 2026-02-14 13:54:13.708687
@@ -10,8 +10,8 @@ current_phase: !!python/object/apply:project_manager_agent.models.project.Projec
 - charter
 progress: !!python/object/apply:decimal.Decimal
 - '0'
-project_path: /Users/nat.mei/data/Claude-Project/douhuiai-ai-platform
-config_path: /Users/nat.mei/data/Claude-Project/douhuiai-ai-platform/config/project.yaml
+project_path: /Users/nat.mei/data/Claude-Project/emnieditor
+config_path: /Users/nat.mei/data/Claude-Project/emnieditor/config/project.yaml
 start_date: null
 target_end_date: null
 actual_end_date: null

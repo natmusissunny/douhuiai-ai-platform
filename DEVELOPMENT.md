@@ -1,4 +1,4 @@
-# 豆绘AI平台 - 开发指南
+# EmniEditor - 开发指南
 
 ## 📋 目录
 
@@ -44,7 +44,7 @@
 ## 项目结构
 
 ```
-douhuiai-ai-platform/
+emnieditor/
 ├── backend/                 # 后端代码
 │   ├── app/
 │   │   ├── api/            # API路由
@@ -64,7 +64,7 @@ douhuiai-ai-platform/
 │   │   │   └── project.py
 │   │   ├── services/       # 业务逻辑层
 │   │   │   ├── project.py
-│   │   │   └── douhuiai.py
+│   │   │   └── emnieditor.py
 │   │   ├── tasks/          # Celery任务
 │   │   │   ├── celery_app.py
 │   │   │   └── project_tasks.py
@@ -107,7 +107,7 @@ douhuiai-ai-platform/
 
 ```bash
 git clone https://github.com/your-org/douhuiai-ai-platform.git
-cd douhuiai-ai-platform
+cd emnieditor
 ```
 
 ### 2. 后端环境
@@ -752,4 +752,4 @@ def paginate(query, page: int, per_page: int):
 ---
 
 **更新日期**: 2026-02-14
-**维护者**: Douhuiai Team
+**维护者**: EmniEditor Team
