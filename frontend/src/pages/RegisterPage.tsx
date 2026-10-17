@@ -1,5 +1,5 @@
 /**
- * 注册页面 - 豆绘AI风格
+ * 注册页面 - EmniEditor 风格
  */
 import { useState } from 'react';
 import { message } from 'antd';

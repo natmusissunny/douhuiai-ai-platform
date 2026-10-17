@@ -4,11 +4,11 @@ services:
   # PostgreSQL 数据库
   postgres:
     image: postgres:14-alpine
-    container_name: douhuiai-postgres
+    container_name: emnieditor-postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-douhuiai_db}
-      POSTGRES_USER: ${POSTGRES_USER:-douhuiai}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-douhuiai_password}
+      POSTGRES_DB: ${POSTGRES_DB:-emnieditor_db}
+      POSTGRES_USER: ${POSTGRES_USER:-emnieditor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-emnieditor_password}
       PGDATA: /var/lib/postgresql/data/pgdata
     # 仅容器间访问，不暴露到宿主机
     expose:
@@ -16,18 +16,18 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-douhuiai} -d ${POSTGRES_DB:-douhuiai_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-emnieditor} -d ${POSTGRES_DB:-emnieditor_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - douhuiai-network
+      - emnieditor-network
     restart: unless-stopped
 
   # Redis
   redis:
     image: alibaba-cloud-linux-3-registry.cn-hangzhou.cr.aliyuncs.com/alinux3/redis_optimized:20240221-6.2.7-2.3.0
-    container_name: douhuiai-redis
+    container_name: emnieditor-redis
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
     # 仅容器间访问，不暴露到宿主机
     expose:
@@ -35,12 +35,13 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      # requirepass is set; healthcheck must authenticate or depends_on never clears
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123}", "--no-auth-warning", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - douhuiai-network
+      - emnieditor-network
     restart: unless-stopped
 
   # 后端 API
@@ -48,16 +49,16 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: douhuiai-backend
+    container_name: emnieditor-backend
     environment:
       # 数据库配置
-      DATABASE_URL: postgresql://${POSTGRES_USER:-douhuiai}:${POSTGRES_PASSWORD:-douhuiai_password}@postgres:5432/${POSTGRES_DB:-douhuiai_db}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-emnieditor}:${POSTGRES_PASSWORD:-emnieditor_password}@postgres:5432/${POSTGRES_DB:-emnieditor_db}
       # Redis配置
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
       CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379/1
       CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-redis123}@redis:6379/2
       # 应用配置
-      APP_NAME: ${APP_NAME:-Douhuiai AI Platform}
+      APP_NAME: ${APP_NAME:-EmniEditor}
       ENVIRONMENT: ${ENVIRONMENT:-development}
       DEBUG: ${DEBUG:-True}
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
@@ -67,11 +68,11 @@ services:
       # JWT配置
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
-      # 豆绘AI API
-      DOUHUIAI_API_URL: ${DOUHUIAI_API_URL:-https://dhd.douhuiai.com}
-      DOUHUIAI_APP_ID: ${DOUHUIAI_APP_ID}
-      DOUHUIAI_APP_SECRET: ${DOUHUIAI_APP_SECRET}
-      DOUHUIAI_IMG_BASE_URL: ${DOUHUIAI_IMG_BASE_URL:-https://img2.douhuiai.com/dhimg/}
+      # 上游 AI API
+      EMNIEDITOR_API_URL: ${EMNIEDITOR_API_URL:-https://dhd.douhuiai.com}
+      EMNIEDITOR_APP_ID: ${EMNIEDITOR_APP_ID}
+      EMNIEDITOR_APP_SECRET: ${EMNIEDITOR_APP_SECRET}
+      EMNIEDITOR_IMG_BASE_URL: ${EMNIEDITOR_IMG_BASE_URL:-https://img2.douhuiai.com/dhimg/}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
@@ -84,7 +85,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - douhuiai-network
+      - emnieditor-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -99,17 +100,17 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: douhuiai-celery-worker
+    container_name: emnieditor-celery-worker
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-douhuiai}:${POSTGRES_PASSWORD:-douhuiai_password}@postgres:5432/${POSTGRES_DB:-douhuiai_db}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-emnieditor}:${POSTGRES_PASSWORD:-emnieditor_password}@postgres:5432/${POSTGRES_DB:-emnieditor_db}
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
       CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379/1
       CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-redis123}@redis:6379/2
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
-      DOUHUIAI_API_URL: ${DOUHUIAI_API_URL:-https://dhd.douhuiai.com}
-      DOUHUIAI_APP_ID: ${DOUHUIAI_APP_ID}
-      DOUHUIAI_APP_SECRET: ${DOUHUIAI_APP_SECRET}
-      DOUHUIAI_IMG_BASE_URL: ${DOUHUIAI_IMG_BASE_URL:-https://img2.douhuiai.com/dhimg/}
+      EMNIEDITOR_API_URL: ${EMNIEDITOR_API_URL:-https://dhd.douhuiai.com}
+      EMNIEDITOR_APP_ID: ${EMNIEDITOR_APP_ID}
+      EMNIEDITOR_APP_SECRET: ${EMNIEDITOR_APP_SECRET}
+      EMNIEDITOR_IMG_BASE_URL: ${EMNIEDITOR_IMG_BASE_URL:-https://img2.douhuiai.com/dhimg/}
     volumes:
       - ./backend/app:/app/app
       - ./backend/logs:/app/logs
@@ -119,7 +120,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - douhuiai-network
+      - emnieditor-network
     restart: unless-stopped
     command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=4
 
@@ -128,9 +129,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: douhuiai-celery-beat
+    container_name: emnieditor-celery-beat
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-douhuiai}:${POSTGRES_PASSWORD:-douhuiai_password}@postgres:5432/${POSTGRES_DB:-douhuiai_db}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-emnieditor}:${POSTGRES_PASSWORD:-emnieditor_password}@postgres:5432/${POSTGRES_DB:-emnieditor_db}
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
       CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379/1
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
@@ -141,7 +142,7 @@ services:
     depends_on:
       - redis
     networks:
-      - douhuiai-network
+      - emnieditor-network
     restart: unless-stopped
     command: celery -A app.tasks.celery_app beat --loglevel=info --schedule=/app/celerybeat-data/celerybeat-schedule
 
@@ -150,13 +151,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: douhuiai-frontend
+    container_name: emnieditor-frontend
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
       - backend
     networks:
-      - douhuiai-network
+      - emnieditor-network
     restart: unless-stopped
 
   # 管理后台（待添加）
@@ -164,13 +165,13 @@ services:
   #   build:
   #     context: ./admin
   #     dockerfile: Dockerfile
-  #   container_name: douhuiai-admin
+  #   container_name: emnieditor-admin
   #   ports:
   #     - "3001:80"
   #   depends_on:
   #     - backend
   #   networks:
-  #     - douhuiai-network
+  #     - emnieditor-network
 
 volumes:
   postgres_data:
@@ -181,5 +182,5 @@ volumes:
     driver: local
 
 networks:
-  douhuiai-network:
+  emnieditor-network:
     driver: bridge

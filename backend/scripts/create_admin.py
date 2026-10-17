@@ -140,7 +140,7 @@ def create_admin_user(db, admin_role):
 def main():
     """主函数"""
     print("=" * 50)
-    print("🚀 豆绘AI平台 - 管理员账号创建工具")
+    print("🚀 EmniEditor - 管理员账号创建工具")
     print("=" * 50)
 
     # 连接数据库

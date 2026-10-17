@@ -1,5 +1,5 @@
 /**
- * 图生图 / 图片重绘页面 - 豆绘AI风格
+ * 图生图 / 图片重绘页面 - EmniEditor 风格
  * 对应后端 POST /api/v1/projects/img2img
  */
 import { useState, useRef } from 'react';

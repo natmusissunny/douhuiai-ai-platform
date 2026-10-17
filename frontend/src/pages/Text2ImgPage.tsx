@@ -1,5 +1,5 @@
 /**
- * AI创作页面 - 豆绘AI风格
+ * AI创作页面 - EmniEditor 风格
  * 对齐官方 /create/text2img 页面布局
  */
 import { useState, useRef, useEffect } from 'react';

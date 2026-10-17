@@ -1,15 +1,15 @@
-# 豆绘AI平台 - 完整架构方案
+# EmniEditor - 完整架构方案
 
 ## 一、项目概述
 
 ### 1.1 项目信息
-- **项目名称**: 豆绘AI平台克隆版
+- **项目名称**: EmniEditor克隆版
 - **参考网站**: https://www.douhuiai.com/
 - **API服务**: https://mpjcmkbgup.apifox.cn/
 - **项目类型**: AI创意生成平台（全栈Web应用 + 管理后台）
 
 ### 1.2 核心目标
-1. 完整复刻豆绘AI的前端界面和用户体验
+1. 完整复刻EmniEditor的前端界面和用户体验
 2. 接入现有的API服务（已发现128个接口）
 3. 实现用户管理和权限控制的管理后台
 4. 支持配额管理和充值系统
@@ -112,7 +112,7 @@
          │                                          │
 ┌────────┴──────────────────────┐   ┌──────────────┴──────────┐
 │      外部API服务               │   │      数据存储层          │
-│  豆绘AI API (Apifox)           │   │  PostgreSQL + Redis     │
+│  上游 AI API (Apifox)           │   │  PostgreSQL + Redis     │
 │  https://mpjcmkbgup.apifox.cn │   │  + OSS (文件存储)        │
 └───────────────────────────────┘   └─────────────────────────┘
          │
@@ -133,7 +133,7 @@
 路由: React Router v6
 UI组件:
   - Ant Design 5.x (基础组件)
-  - 自定义组件 (复刻豆绘UI风格)
+  - 自定义组件 (复刻EmniEditorUI风格)
 样式方案:
   - Tailwind CSS (快速开发)
   - CSS Modules (组件隔离)
@@ -870,18 +870,18 @@ async def get_statistics(
 ### 8.1 API客户端封装
 
 ```python
-# services/douhuiai_client.py
+# services/emnieditor_client.py
 import httpx
 from typing import Optional, Dict, Any
 from app.config import settings
 
-class DouhuiAIClient:
-    """豆绘AI API客户端"""
+class EmniEditorClient:
+    """上游 AI API客户端"""
 
     def __init__(self):
-        self.base_url = settings.DOUHUIAI_API_URL
-        self.app_id = settings.DOUHUIAI_APP_ID
-        self.app_secret = settings.DOUHUIAI_APP_SECRET
+        self.base_url = settings.EMNIEDITOR_API_URL
+        self.app_id = settings.EMNIEDITOR_APP_ID
+        self.app_secret = settings.EMNIEDITOR_APP_SECRET
         self.client = httpx.AsyncClient(timeout=60.0)
 
     def _get_headers(self) -> Dict[str, str]:
@@ -965,7 +965,7 @@ class DouhuiAIClient:
 ```python
 # tasks/ai_tasks.py
 from celery import Celery
-from app.services.douhuiai_client import DouhuiAIClient
+from app.services.emnieditor_client import EmniEditorClient
 from app.models.project import Project
 from app.database import SessionLocal
 import asyncio
@@ -986,7 +986,7 @@ def process_ai_task(project_id: int):
         db.commit()
 
         # 调用API
-        client = DouhuiAIClient()
+        client = EmniEditorClient()
 
         # 根据类型调用不同的API
         if project.type == "text2img":
@@ -1028,7 +1028,7 @@ def poll_ai_task(project_id: int):
         if not project or not project.uuid:
             return
 
-        client = DouhuiAIClient()
+        client = EmniEditorClient()
         result = asyncio.run(client.poll_task(project.uuid))
 
         status = result.get("status")
@@ -1093,10 +1093,10 @@ services:
       - postgres
       - redis
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/douhuiai
+      - DATABASE_URL=postgresql://user:password@postgres:5432/emnieditor
       - REDIS_URL=redis://redis:6379/0
-      - DOUHUIAI_APP_ID=dh2602mi6lcobtnsmn
-      - DOUHUIAI_APP_SECRET=7cbe794c53bd82fdda875814cddd21e3
+      - EMNIEDITOR_APP_ID=dh2602mi6lcobtnsmn
+      - EMNIEDITOR_APP_SECRET=7cbe794c53bd82fdda875814cddd21e3
     volumes:
       - ./backend:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -1108,7 +1108,7 @@ services:
       - postgres
       - redis
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/douhuiai
+      - DATABASE_URL=postgresql://user:password@postgres:5432/emnieditor
       - REDIS_URL=redis://redis:6379/0
     command: celery -A app.tasks.celery_app worker --loglevel=info
 
@@ -1120,7 +1120,7 @@ services:
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=douhuiai_db
+      - POSTGRES_DB=emnieditor_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -1146,7 +1146,7 @@ volumes:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: douhuiai-backend
+  name: emnieditor-backend
 spec:
   replicas: 3
   selector:
@@ -1159,7 +1159,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: douhuiai/backend:latest
+        image: emnieditor/backend:latest
         ports:
         - containerPort: 8000
         env:
@@ -1394,7 +1394,7 @@ class Text2ImgRequest(BaseModel):
 
 **任务清单:**
 - [ ] 外部API集成
-  - 豆绘AI客户端封装
+  - EmniEditor客户端封装
   - API接口测试
   - 错误处理
 - [ ] AI功能实现
@@ -1560,7 +1560,7 @@ UI/UX: 0.5人 (兼职)
 ### 13.1 技术风险
 
 1. **外部API稳定性**
-   - 风险: 豆绘AI API可能不稳定或限流
+   - 风险: 上游 AI API可能不稳定或限流
    - 应对: 实现重试机制、错误降级、备用方案
 
 2. **AI生成耗时**
@@ -1665,7 +1665,7 @@ UI/UX: 0.5人 (兼职)
 ---
 
 **参考资料**:
-- 豆绘AI官网: https://www.douhuiai.com/
+- 上游 AI 官网: https://www.douhuiai.com/
 - API文档: https://mpjcmkbgup.apifox.cn/
 - FastAPI文档: https://fastapi.tiangolo.com/
 - React文档: https://react.dev/

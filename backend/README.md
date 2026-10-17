@@ -1,4 +1,4 @@
-# 豆绘AI平台 - 后端服务
+# EmniEditor - 后端服务
 
 **版本**: v1.0.0 RC1
 **语言**: Python 3.12
@@ -8,7 +8,7 @@
 
 ## 📋 项目概述
 
-豆绘AI平台的后端服务，基于FastAPI构建的高性能异步Web服务，提供完整的RESTful API。
+EmniEditor的后端服务，基于FastAPI构建的高性能异步Web服务，提供完整的RESTful API。
 
 ### 核心功能
 
@@ -397,16 +397,16 @@ bash ../scripts/check_quality.sh
 | **LOG_LEVEL** | 日志级别 | `INFO` |
 | **ACCESS_TOKEN_EXPIRE_MINUTES** | Token有效期 | `30` |
 | **REFRESH_TOKEN_EXPIRE_DAYS** | 刷新Token有效期 | `7` |
-| **DOUHUIAI_API_KEY** | 豆绘AI密钥 | - |
-| **DOUHUIAI_API_BASE_URL** | 豆绘AI地址 | - |
+| **EMNIEDITOR_API_KEY** | EmniEditor密钥 | - |
+| **EMNIEDITOR_API_BASE_URL** | EmniEditor地址 | - |
 
 ### AI服务配置
 
 ```bash
-# 豆绘AI配置（待集成）
-DOUHUIAI_API_KEY=your-api-key
-DOUHUIAI_API_BASE_URL=https://api.douhuiai.com
-DOUHUIAI_API_VERSION=v1
+# EmniEditor配置（待集成）
+EMNIEDITOR_API_KEY=your-api-key
+EMNIEDITOR_API_BASE_URL=https://api.douhuiai.com
+EMNIEDITOR_API_VERSION=v1
 ```
 
 ---
@@ -496,7 +496,7 @@ async def text_to_image(params):
     }
 ```
 
-**解决方案**: 获取豆绘AI正式API权限后，替换为真实API调用
+**解决方案**: 获取EmniEditor正式API权限后，替换为真实API调用
 
 详见: [API访问权限申请指南](../API_ACCESS_GUIDE.md)
 

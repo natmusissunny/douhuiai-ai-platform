@@ -1,5 +1,5 @@
 /**
- * 首页 - 豆绘AI风格
+ * 首页 - EmniEditor 风格
  * 左侧导航：图标+文字横排，36px高度，悬停弹出二级菜单
  */
 import { useState } from 'react';
@@ -209,7 +209,7 @@ const HomePage = () => {
           textAlign: 'center',
         }}>
           <h1 style={{ fontSize: 36, fontWeight: 700, color: '#1a1a1a', marginBottom: 8 }}>
-            豆绘AI，<span style={{ color: '#16a34a' }}>智能图片编辑</span>
+            EmniEditor，<span style={{ color: '#16a34a' }}>智能图片编辑</span>
           </h1>
           <p style={{ color: '#6b7280', fontSize: 16, marginBottom: 28 }}>
             图片精修、场景融合、批量抠图、产品电商，一站式图片处理工具

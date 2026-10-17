@@ -1,5 +1,5 @@
 /**
- * 编辑应用页面 - 豆绘AI风格
+ * 编辑应用页面 - EmniEditor 风格
  * 对应后端 POST /api/v1/projects/edit
  */
 import { useState, useRef } from 'react';

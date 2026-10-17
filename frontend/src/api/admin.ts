@@ -241,7 +241,7 @@ export const getQuotaTransactions = (params?: {
 };
 
 /**
- * 获取豆绘AI API账户余额
+ * 获取上游 AI API账户余额
  */
 export const getApiBalance = () => {
   return request.get<ApiBalance>('/api/v1/admin/api-balance');

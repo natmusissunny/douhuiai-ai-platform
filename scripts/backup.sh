@@ -17,8 +17,8 @@ if [ -f .env ]; then
 fi
 
 # 设置默认值
-POSTGRES_DB=${POSTGRES_DB:-douhuiai_db}
-POSTGRES_USER=${POSTGRES_USER:-douhuiai}
+POSTGRES_DB=${POSTGRES_DB:-emnieditor_db}
+POSTGRES_USER=${POSTGRES_USER:-emnieditor}
 BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-7}
 
 # 颜色输出
@@ -28,7 +28,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo "=========================================="
-echo "🗄️  豆绘AI平台 - 数据库备份工具"
+echo "🗄️  EmniEditor - 数据库备份工具"
 echo "=========================================="
 echo ""
 
@@ -39,9 +39,9 @@ if [ ! -d "$BACKUP_DIR" ]; then
 fi
 
 # 检查Docker是否运行
-if ! docker-compose ps | grep -q "douhuiai-postgres"; then
+if ! docker compose ps | grep -q "emnieditor-postgres"; then
     echo -e "${RED}❌ 错误: PostgreSQL容器未运行${NC}"
-    echo "请先启动服务: docker-compose up -d postgres"
+    echo "请先启动服务: docker compose up -d postgres"
     exit 1
 fi
 
@@ -55,7 +55,7 @@ echo ""
 POSTGRES_BACKUP_FILE="$BACKUP_DIR/postgres_${POSTGRES_DB}_$TIMESTAMP.sql"
 echo "🔄 正在导出PostgreSQL数据..."
 
-if docker-compose exec -T postgres pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" > "$POSTGRES_BACKUP_FILE"; then
+if docker compose exec -T postgres pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" > "$POSTGRES_BACKUP_FILE"; then
     # 压缩备份文件
     echo "🗜️  正在压缩备份文件..."
     gzip "$POSTGRES_BACKUP_FILE"
@@ -74,16 +74,16 @@ fi
 echo ""
 
 # 备份Redis (可选)
-if docker-compose ps | grep -q "douhuiai-redis"; then
+if docker compose ps | grep -q "emnieditor-redis"; then
     echo "🔄 正在备份Redis数据..."
     REDIS_BACKUP_FILE="$BACKUP_DIR/redis_dump_$TIMESTAMP.rdb"
 
     # 触发Redis保存
-    docker-compose exec -T redis redis-cli --raw SAVE > /dev/null 2>&1 || true
+    docker compose exec -T redis redis-cli -a "" --no-auth-warning --raw SAVE > /dev/null 2>&1 || true
     sleep 2
 
     # 复制RDB文件
-    if docker cp douhuiai-redis:/data/dump.rdb "$REDIS_BACKUP_FILE" 2>/dev/null; then
+    if docker cp emnieditor-redis:/data/dump.rdb "$REDIS_BACKUP_FILE" 2>/dev/null; then
         FILESIZE=$(du -h "$REDIS_BACKUP_FILE" | cut -f1)
         echo -e "${GREEN}✅ Redis备份成功${NC}"
         echo "  文件: $REDIS_BACKUP_FILE"

@@ -1,5 +1,5 @@
 """
-豆绘AI API 服务
+上游 AI API 服务
 
 接口规格（来自官方文档）：
 - Base URL: https://dhd.douhuiai.com
@@ -14,14 +14,14 @@ from typing import Dict, Any, Optional
 from app.config import settings
 
 
-class DouhuiAIService:
-    """豆绘AI API 服务类"""
+class EmniEditorService:
+    """上游 AI API 服务类"""
 
     def __init__(self):
-        self.base_url = settings.DOUHUIAI_API_URL
-        self.app_id = settings.DOUHUIAI_APP_ID
-        self.app_secret = settings.DOUHUIAI_APP_SECRET
-        self.img_base_url = settings.DOUHUIAI_IMG_BASE_URL
+        self.base_url = settings.EMNIEDITOR_API_URL
+        self.app_id = settings.EMNIEDITOR_APP_ID
+        self.app_secret = settings.EMNIEDITOR_APP_SECRET
+        self.img_base_url = settings.EMNIEDITOR_IMG_BASE_URL
         self.timeout = 30.0
 
     def _get_headers(self) -> Dict[str, str]:
@@ -138,7 +138,7 @@ class DouhuiAIService:
 
             return result
 
-    # 前端 edit_type → 豆绘API dhSubAiType 映射表
+    # 前端 edit_type → 上游 API dhSubAiType 映射表
     EDIT_TYPE_MAP = {
         "upscale":       {"dhSubAiType": "upscale",      "dhAiSubType": "upscale4k", "dhMode": "1"},  # 高清放大
         "hd_repaint":    {"dhSubAiType": "repainting",   "dhAiSubType": "upscale2k"},                # 高清重绘
@@ -269,7 +269,7 @@ class DouhuiAIService:
                 headers=self._get_headers(),
                 params={"uuid": uuid, "source": "api"},
             )
-            # 豆绘 API 对无效 UUID 返回 HTTP 404 + HTML，而非 JSON
+            # EmniEditor API 对无效 UUID 返回 HTTP 404 + HTML，而非 JSON
             # 统一映射为业务状态 404（任务过期/不存在）
             if response.status_code == 404:
                 return {"status": 404, "msg": "任务不存在或已过期"}
@@ -282,7 +282,7 @@ class DouhuiAIService:
 
     async def upload_image(self, file_bytes: bytes, filename: str = "upload.jpg") -> str:
         """
-        上传图片到豆绘AI
+        上传图片到EmniEditor
 
         接口: POST /api/index/apiupload
         参数: file（二进制，multipart/form-data）
@@ -1088,4 +1088,4 @@ class DouhuiAIService:
 
 
 # 单例
-douhuiai_service = DouhuiAIService()
+emnieditor_service = EmniEditorService()

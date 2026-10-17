@@ -1,5 +1,5 @@
 /**
- * 认证页面布局 - 豆绘AI风格
+ * 认证页面布局 - EmniEditor 风格
  */
 import { Outlet } from 'react-router-dom';
 
@@ -25,7 +25,7 @@ const AuthLayout = () => {
             fontSize: 24, color: '#fff', fontWeight: 700,
             boxShadow: '0 4px 12px rgba(22,163,74,0.3)',
           }}>豆</div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#1f2937', margin: 0 }}>豆绘AI</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#1f2937', margin: 0 }}>EmniEditor</h1>
           <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>AI创意生成平台</p>
         </div>
         <Outlet />

@@ -1,5 +1,5 @@
 /**
- * 图转3D / 3D渲染页面 - 豆绘AI风格
+ * 图转3D / 3D渲染页面 - EmniEditor 风格
  * 对应后端 POST /api/v1/projects/3d_render
  */
 import { useState, useRef } from 'react';

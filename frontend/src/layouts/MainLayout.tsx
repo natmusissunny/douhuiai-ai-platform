@@ -1,5 +1,5 @@
 /**
- * 主布局组件 - 豆绘AI风格
+ * 主布局组件 - EmniEditor 风格
  */
 import { Dropdown, Avatar, Button, Badge } from 'antd';
 import { Outlet, useNavigate } from 'react-router-dom';
@@ -72,7 +72,7 @@ const MainLayout = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontWeight: 700, fontSize: 14,
           }}>豆</div>
-          <span style={{ fontSize: 18, fontWeight: 700, color: '#1f2937' }}>豆绘AI</span>
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#1f2937' }}>EmniEditor</span>
         </div>
 
         {/* 导航链接 — 首页为绿色胶囊按钮（对齐官网） */}
